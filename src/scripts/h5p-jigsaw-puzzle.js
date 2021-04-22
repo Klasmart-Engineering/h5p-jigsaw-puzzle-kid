@@ -76,7 +76,7 @@ export default class JigsawPuzzle extends H5P.Question {
           width: this.params.tilesHorizontal,
           height: this.params.tilesVertical
         },
-        sortingSpace: this.params.behaviour.sortingSpace / 100,
+        sortingSpace: this.params.behaviour.sortingSpace,
         previousState: this.extras.previousState
       },
       {

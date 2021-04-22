@@ -22,6 +22,11 @@ export default class JigsawPuzzleContent {
     this.puzzleDropzone.classList.add('h5p-jigsaw-puzzle-tile-container');
     this.content.appendChild(this.puzzleDropzone);
 
+    const sortingArea = document.createElement('div');
+    sortingArea.classList.add('h5p-jigsaw-puzzle-sorting-area');
+    sortingArea.style.width = `${(100 * this.params.sortingSpace) / (100 - this.params.sortingSpace)}%`;
+    this.content.appendChild(sortingArea);
+
     this.image = document.createElement('img');
     this.image.addEventListener('load', () => {
       this.handleImageLoaded();
@@ -129,19 +134,18 @@ export default class JigsawPuzzleContent {
   handleResize() {
     if (this.originalSize) {
 
-      // TODO: Consider top/left margin for puzzle dropzone!!!
-      this.scale = this.content.offsetWidth * (1 - this.params.sortingSpace) / this.originalSize.width;
+      this.scale = this.puzzleDropzone.offsetWidth / this.originalSize.width;
 
       // TODO: 2 * BorderWidth
-      this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - 4}px`;
       this.puzzleDropzone.style.height = `${this.scale * this.originalSize.height - 4}px`;
 
       this.tiles.forEach(tile => {
         tile.instance.setScale(this.scale);
 
+        // Recompute position with offset
         tile.instance.setPosition({
-          x: tile.position.x * this.puzzleDropzone.offsetWidth,
-          y: tile.position.y * this.puzzleDropzone.offsetHeight
+          x: tile.position.x * this.puzzleDropzone.offsetWidth + this.puzzleDropzone.offsetLeft,
+          y: tile.position.y * this.puzzleDropzone.offsetHeight + this.puzzleDropzone.offsetTop
         });
       });
     }
@@ -285,12 +289,10 @@ export default class JigsawPuzzleContent {
       return;
     }
 
-    // TODO: Offset for puzzle dropzone top/left margin!!!
-
-    // Required for resizing
+    // Required for resizing,
     this.tiles[tile.getId()].position = {
-      x: x / this.puzzleDropzone.offsetWidth,
-      y: y / this.puzzleDropzone.offsetHeight
+      x: (x - this.puzzleDropzone.offsetLeft) / this.puzzleDropzone.offsetWidth,
+      y: (y - this.puzzleDropzone.offsetTop) / this.puzzleDropzone.offsetHeight
     };
 
     tile.setPosition({
@@ -369,9 +371,9 @@ export default class JigsawPuzzleContent {
 
   handlePuzzleTileCreated(tile) {
     // Position tiles randomly depending on space available
-    const left = (this.content.offsetWidth * this.params.sortingSpace < tile.getSize().width) ?
+    const left = (this.content.offsetWidth * this.params.sortingSpace / 100 < tile.getSize().width) ?
       Math.max(0, Math.random() * (this.content.offsetWidth - tile.getSize().width)) :
-      Math.max(0, this.content.offsetWidth * (1 - this.params.sortingSpace) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace) - tile.getSize().width));
+      Math.max(0, this.content.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace / 100) - tile.getSize().width));
     const top = Math.max(0, Math.random() * (this.content.offsetHeight - tile.getSize().height));
     this.setTilePosition(tile, left, top);
 

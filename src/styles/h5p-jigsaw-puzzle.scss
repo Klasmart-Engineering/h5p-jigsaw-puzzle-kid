@@ -1,12 +1,15 @@
 .h5p-jigsaw-puzzle {
 
-  .h5p-question-content {
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
-  }
-
   .h5p-jigsaw-puzzle-puzzle-area {
+    display: flex;
+    flex-direction: row;
+
+    .h5p-jigsaw-puzzle-tile-container {
+      background-size: cover;
+      border: 2px solid #808080;
+      width: 100%;
+    }
+
     .h5p-jigsaw-puzzle-tile {
       position: absolute;
 
@@ -26,10 +29,5 @@
         opacity: 0;
       }
     }
-  }
-
-  .h5p-jigsaw-puzzle-tile-container {
-    background-size: cover;
-    border: 2px solid #808080;
   }
 }
