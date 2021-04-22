@@ -40,12 +40,15 @@ export default class JigsawPuzzle extends H5P.Question {
       tilesVertical: 3,
       behaviour: {
         sortingSpace: 50,
+        enableComplete: true,
+        enableHint: true,
         enableSolutionsButton: true,
-        enableRetry: true
+        enableRetry: true,
+        showBackground: true
       },
       l10n: {
-        checkAnswer: 'Check answer',
-        showSolution: 'Show solution',
+        complete: 'Complete',
+        hint: 'Hint',
         tryAgain: 'Retry'
       }
     }, this.params);
@@ -79,7 +82,8 @@ export default class JigsawPuzzle extends H5P.Question {
         sortingSpace: this.params.behaviour.sortingSpace,
         previousState: this.extras.previousState,
         stroke: Math.max(window.innerWidth / 750, 1.75),
-        tileBorderColor: 'rgba(80,80,80,0.5)'
+        tileBorderColor: 'rgba(80,80,80,0.5)',
+        showBackground: this.params.behaviour.showBackground
       },
       {
         onResize: (() => {
@@ -104,35 +108,24 @@ export default class JigsawPuzzle extends H5P.Question {
    * Add all the buttons that shall be passed to H5P.Question.
    */
   addButtons() {
-    // Check answer button
-    this.addButton('check-answer', this.params.l10n.checkAnswer, () => {
-      // TODO: Implement something useful to do on click
-      this.hideButton('check-answer');
+    // Toggle background music button
+    this.addButton('toggle-background-music', '', () => {
+    }, false, {}, {});
 
-      if (this.params.behaviour.enableSolutionsButton) {
-        this.showButton('show-solution');
-      }
-
-      if (this.params.behaviour.enableRetry) {
-        this.showButton('try-again');
-      }
+    // Toggle background music button
+    this.addButton('complete', this.params.l10n.complete, () => {
     }, true, {}, {});
 
-    // Show solution button
-    this.addButton('show-solution', this.params.l10n.showSolution, () => {
-      // TODO: Implement something useful to do on click
-    }, false, {}, {});
+    // Toggle background music button
+    this.addButton('hint', this.params.l10n.hint, () => {
+    }, true, {}, {});
 
     // Retry button
     this.addButton('try-again', this.params.l10n.tryAgain, () => {
-      this.showButton('check-answer');
-      this.hideButton('show-solution');
-      this.hideButton('try-again');
-
       this.resetTask();
 
       this.trigger('resize');
-    }, false, {}, {});
+    }, true, {}, {});
   }
 
   /**
@@ -147,7 +140,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Get latest score.
-   *
    * @return {number} latest score.
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-2}
    */
@@ -157,7 +149,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Get maximum possible score.
-   *
    * @return {number} Score necessary for mastering.
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-3}
    */
@@ -167,27 +158,24 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Show solutions.
-   *
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-4}
    */
   showSolutions() {
-    // TODO: Implement showing the solutions
+    // TODO: Point to complete function
 
     this.trigger('resize');
   }
 
   /**
    * Reset task.
-   *
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-5}
    */
   resetTask() {
-    // TODO: Reset what needs to be reset
+    this.content.reset();
   }
 
   /**
    * Get xAPI data.
-   *
    * @return {object} XAPI statement.
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-6}
    */
@@ -199,7 +187,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Build xAPI answer event.
-   *
    * @return {H5P.XAPIEvent} XAPI answer event.
    */
   getXAPIAnswerEvent() {
@@ -218,7 +205,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Create an xAPI event for Dictation.
-   *
    * @param {string} verb Short id of the verb we want to trigger.
    * @return {H5P.XAPIEvent} Event template.
    */
@@ -232,7 +218,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Get the xAPI definition for the xAPI object.
-   *
    * @return {object} XAPI definition.
    */
   getxAPIDefinition() {
@@ -256,7 +241,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Determine whether the task has been passed by the user.
-   *
    * @return {boolean} True if user passed or task is not scored.
    */
   isPassed() {
@@ -265,7 +249,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Get tasks title.
-   *
    * @return {string} Title.
    */
   getTitle() {
@@ -281,7 +264,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Get tasks description.
-   *
    * @return {string} Description.
    */
   // TODO: Have a field for a task description in the editor if you need one.
@@ -291,7 +273,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Answer call to return the current state.
-   *
    * @return {object} Current state.
    */
   getCurrentState() {
@@ -326,4 +307,4 @@ export default class JigsawPuzzle extends H5P.Question {
 }
 
 /** @constant {string} */
-JigsawPuzzle.DEFAULT_DESCRIPTION = 'Hello World';
+JigsawPuzzle.DEFAULT_DESCRIPTION = 'Jigsaw Puzzle';

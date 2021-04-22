@@ -223,6 +223,31 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Reset.
+   */
+  reset() {
+    this.tiles.forEach(tile => {
+      tile.instance.enable();
+      this.randomizeTile(tile.instance);
+    });
+  }
+
+  /**
+   * Randomize tile position.
+   * @param {JigsawPuzzleTile} tile Puzzle tile.
+   */
+  randomizeTile(tile) {
+    // Position tile randomly depending on space available
+    const tileSize = tile.getSize();
+    const left = (this.content.offsetWidth * this.params.sortingSpace / 100 < tileSize.width) ?
+      Math.max(0, Math.random() * (this.content.offsetWidth - tile.getSize().width)) :
+      Math.max(0, this.content.offsetLeft + this.content.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace / 100) - tileSize.width));
+    const top = Math.max(0, Math.random() * (this.content.offsetHeight - tileSize.height));
+
+    this.setTilePosition(tile, left, top);
+  }
+
+  /**
    * Hide neighboring tile borders
    * @param {JigsawPuzzleTile} tile Tile whose neighbors will be checked.
    */
@@ -324,14 +349,16 @@ export default class JigsawPuzzleContent {
       }
     }
 
-    // Apply transparency on background image and use it as background
-    const imageData = canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    const pixels = imageData.data;
-    for (let i = 0; i < pixels.length; i += 4) {
-      pixels[i + 3] = 16;
+    if (this.params.showBackground) {
+      // Apply transparency on background image and use it as background
+      const imageData = canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      const pixels = imageData.data;
+      for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i + 3] = 16;
+      }
+      canvasContext.putImageData(imageData, 0, 0);
+      this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
     }
-    canvasContext.putImageData(imageData, 0, 0);
-    this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
 
     // Resize now that the content is created
     this.handleResize();
@@ -381,7 +408,7 @@ export default class JigsawPuzzleContent {
    * Handle puzzle tile being moved.
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
-  handlePuzzleTileMove(tile) {
+  handlePuzzleTileMove() {
     // TODO: Coule be useful for showing hints
   }
 
@@ -429,11 +456,7 @@ export default class JigsawPuzzleContent {
    */
   handlePuzzleTileCreated(tile) {
     // Position tile randomly depending on space available
-    const left = (this.content.offsetWidth * this.params.sortingSpace / 100 < tile.getSize().width) ?
-      Math.max(0, Math.random() * (this.content.offsetWidth - tile.getSize().width)) :
-      Math.max(0, this.content.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace / 100) - tile.getSize().width));
-    const top = Math.max(0, Math.random() * (this.content.offsetHeight - tile.getSize().height));
-    this.setTilePosition(tile, left, top);
+    this.randomizeTile(tile);
 
     this.content.appendChild(tile.getDOM());
 

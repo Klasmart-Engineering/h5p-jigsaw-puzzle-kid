@@ -34,4 +34,16 @@
       }
     }
   }
+
+  .h5p-question-buttons {
+
+    .h5p-question-complete::before {
+        content: "\F11E";
+    }
+
+    .h5p-question-hint::before {
+        content: "\F21B";
+    }
+
+  }
 }

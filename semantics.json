@@ -25,12 +25,80 @@
     "default": 3
   },
   {
+    "name": "sound",
+    "type": "group",
+    "label": "Sound settings",
+    "importance": "low",
+    "description": "These options will let you set sound related options.",
+    "fields": [
+      {
+        "name": "backgroundMusic",
+        "type": "audio",
+        "label": "Background Music",
+        "description": "Optional background music",
+        "importance": "low",
+        "optional": true
+      },
+      {
+        "name": "autoplayBackgroundMusic",
+        "label": "Autoplay background music",
+        "description": "Try to autoplay background music. May not be possible depending on the browser's policy.",
+        "type": "boolean",
+        "importance": "low",
+        "default": false
+      },
+      {
+        "name": "dropPuzzleTile",
+        "type": "audio",
+        "label": "Drop puzzle tile",
+        "description": "Optional sound to play when a puzzle tile is dropped.",
+        "importance": "low",
+        "optional": true
+      },
+      {
+        "name": "matchPuzzleTile",
+        "type": "audio",
+        "label": "Drop puzzle tile correctly",
+        "description": "Optional sound to play when a puzzle tile is dropped in the correct spot.",
+        "importance": "low",
+        "optional": true
+      }
+    ]
+  },
+  {
     "name": "behaviour",
     "type": "group",
     "label": "Behavioural settings",
     "importance": "low",
     "description": "These options will let you control how the task behaves.",
     "fields": [
+      {
+        "name": "timeLimit",
+        "label": "Time limit",
+        "description": "Set an optional time limit in seconds.",
+        "type": "number",
+        "importance": "low",
+        "optional": true,
+        "min": 1
+      },
+      {
+        "name": "timeAffordances",
+        "label": "Time to affordances",
+        "description": "Set an optional time limit in seconds until the user is shown where one of the tiles needs to go.",
+        "type": "number",
+        "importance": "low",
+        "optional": true,
+        "min": 1
+      },
+      {
+        "name": "showBackground",
+        "label": "Show faint background",
+        "description": "Show faint background to indicate where a puzzle tile needs to go.",
+        "type": "boolean",
+        "importance": "low",
+        "default": true,
+        "optional": true
+      },
       {
         "name": "sortingSpace",
         "label": "Sorting space",
@@ -40,6 +108,22 @@
         "default": 50,
         "min": 0,
         "max": 75
+      },
+      {
+        "name": "enableComplete",
+        "label": "Enable \"Complete\"",
+        "type": "boolean",
+        "importance": "low",
+        "default": true,
+        "optional": true
+      },
+      {
+        "name": "enableHint",
+        "label": "Enable \"Hint\"",
+        "type": "boolean",
+        "importance": "low",
+        "default": true,
+        "optional": true
       },
       {
         "name": "enableRetry",
@@ -55,7 +139,8 @@
         "type": "boolean",
         "importance": "low",
         "default": true,
-        "optional": true
+        "optional": true,
+        "widget": "none"
       }
     ]
   },
@@ -67,11 +152,18 @@
     "importance": "low",
     "fields": [
       {
-        "name": "checkAnswer",
+        "name": "complete",
         "type": "text",
-        "label": "Text for \"Check\" button",
+        "label": "Text for \"Complete\" button",
         "importance": "low",
-        "default": "Check"
+        "default": "Complete"
+      },
+      {
+        "name": "hint",
+        "type": "text",
+        "label": "Text for \"Hint\" button",
+        "importance": "low",
+        "default": "Hint"
       },
       {
         "name": "tryAgain",
@@ -79,13 +171,6 @@
         "type": "text",
         "importance": "low",
         "default": "Retry"
-      },
-      {
-        "name": "showSolution",
-        "type": "text",
-        "label": "Text for \"Show solution\" button",
-        "importance": "low",
-        "default": "Show solution"
       }
     ]
   }
