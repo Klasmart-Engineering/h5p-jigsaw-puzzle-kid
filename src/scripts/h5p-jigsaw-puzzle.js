@@ -77,7 +77,9 @@ export default class JigsawPuzzle extends H5P.Question {
           height: this.params.tilesVertical
         },
         sortingSpace: this.params.behaviour.sortingSpace,
-        previousState: this.extras.previousState
+        previousState: this.extras.previousState,
+        stroke: Math.max(window.innerWidth / 750, 1.75),
+        tileBorderColor: 'rgba(80,80,80,0.5)'
       },
       {
         onResize: (() => {

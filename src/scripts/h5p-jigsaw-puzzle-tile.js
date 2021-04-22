@@ -4,6 +4,12 @@ import Util from './h5p-jigsaw-puzzle-util';
 export default class JigsawPuzzleTile {
   /**
    * @constructor
+   * @param {object} params Parameters.
+   * @param {object} callbacks Callbacks.
+   * @param {function} callbacks.onTileCreated Callback for when tile is created.
+   * @param {function} callbacks.onTileMoveStart Callback for when tile is about to be moved.
+   * @param {function} callbacks.onTileMove Callback for when tile is moved.
+   * @param {function} callbacks.onTileMoveEnd Callback for when tile is dropped.
    */
   constructor(params = {}, callbacks = {}) {
     this.params = params;
@@ -25,6 +31,8 @@ export default class JigsawPuzzleTile {
     this.backgroundImage.addEventListener('load', () => {
       this.handleImageLoaded();
     });
+    // Use the same crossOrigin policy as the initial image used.
+    this.backgroundImage.crossOrigin = params.imageCrossOrigin;
     this.backgroundImage.src = params.imageSource;
 
     this.handleTileMoveStart = this.handleTileMoveStart.bind(this);
@@ -38,17 +46,26 @@ export default class JigsawPuzzleTile {
   }
 
   /**
-   * Return the DOM for this class.
+   * Return the DOM for tile.
    * @return {HTMLElement} DOM for this class.
    */
   getDOM() {
     return this.tile;
   }
 
+  /**
+   * Return the outer HTML for tile.
+   * @return {string} Outer HTML for tile.
+   */
   getHTML() {
     return this.tile.outerHTML;
   }
 
+  /**
+   * Build SVG element.
+   * @param {object} params Parameters.
+   * @return {HTMLElement} SVG element.
+   */
   buildSVG(params = {}) {
     const svg = document.createElement('svg');
 
@@ -86,7 +103,7 @@ export default class JigsawPuzzleTile {
     ['top', 'right', 'bottom', 'left'].forEach(side => {
       this.pathBorders[side] = this.buildPathDOM({
         stroke: params.stroke,
-        color: 'black', // TODO: variable
+        color: this.params.borderColor,
         width: params.baseWidth,
         height: params.baseHeight,
         orientation: this.params.borders[side].orientation,
@@ -104,10 +121,11 @@ export default class JigsawPuzzleTile {
     return svg;
   }
 
-  updateParams(params) {
-    this.params = Util.extend(this.params, params);
-  }
-
+  /**
+   * Build DOM element for SVG path.
+   * @param {object} params Parameters.
+   * @return {HTMLElement} DOM for SVG path.
+   */
   buildPathDOM(params = {}) {
     const pathDOM = document.createElement('path');
     pathDOM.setAttribute('fill-opacity', '0');
@@ -129,6 +147,11 @@ export default class JigsawPuzzleTile {
     return pathDOM;
   }
 
+  /**
+   * Build SVG segment.
+   * @param {object} params Parameters.
+   * @return {string} SVG path.
+   */
   buildPathSegment(params = {}) {
     const knob = Math.min(params.width, params.height) / 2;
 
@@ -143,10 +166,11 @@ export default class JigsawPuzzleTile {
       offsetY += params.stroke / 2 + knob / 2;
     }
 
+    // Start position
     const offset = `M ${offsetX}, ${offsetY}`;
     const pathSide = (params.side === 'top' || params.side === 'bottom') ? 'horizontal' : 'vertical';
 
-    const path = JigsawPuzzleTile.PATHS_TMP[`${pathSide}-${params.orientation}`];
+    const path = JigsawPuzzleTile.PATHS_BORDER[`${pathSide}-${params.orientation}`];
 
     return `${offset} ${path}`
       .replace(/@w/g, params.width)
@@ -157,7 +181,7 @@ export default class JigsawPuzzleTile {
   }
 
   /**
-   * Build SVG stroke dash.
+   * Build SVG path dash.
    * @param {object} params Parameters.
    * @param {string} params.type Puzzle tile type.
    * @param {number} params.width Width.
@@ -174,6 +198,14 @@ export default class JigsawPuzzleTile {
       .replace(/@knob/g, knob)
       .replace(/@gapw/g, (params.width - knob) / 2)
       .replace(/@gaph/g, (params.height - knob) / 2);
+  }
+
+  /**
+   * Update parameters.
+   * @param {object} params Parameters.
+   */
+  updateParams(params) {
+    this.params = Util.extend(this.params, params);
   }
 
   /**
@@ -323,6 +355,9 @@ export default class JigsawPuzzleTile {
     this.tile.classList.add('onTop');
   }
 
+  /**
+   * Repaint the svg content.
+   */
   repaintSVG() {
     this.tile.innerHTML = '';
 
@@ -341,6 +376,9 @@ export default class JigsawPuzzleTile {
     this.tile.innerHTML = svg.outerHTML;
   }
 
+  /**
+   * Handle image was loaded.
+   */
   handleImageLoaded() {
     this.setScale(this.scale);
 
@@ -424,7 +462,7 @@ export default class JigsawPuzzleTile {
   }
 }
 
-/** constant */
+/** constant {object} SVG path for complete tiles */
 JigsawPuzzleTile.PATHS = {
   'top-left': 'M @off, @off l @w, 0 l 0, @gaph a 1 1 0 0 0 0 @knob l 0, @gaph l -@gapw, 0 a 1 1 0 0 0 -@knob 0 l -@gapw, 0 l 0 -@h Z',
   'top-inner': 'M @offknob, @off l @w, 0 l 0, @gaph a 1 1 0 0 0 0 @knob l 0, @gaph l -@gapw, 0 a 1 1 0 0 0 -@knob 0 l -@gapw, 0 l 0, -@gaph a 1 1 0 0 1 0 -@knob l 0, -@gaph Z',
@@ -437,7 +475,8 @@ JigsawPuzzleTile.PATHS = {
   'bottom-right': 'M @offknob, @offknob l @gapw, 0 a 1 1 0 0 1 @knob 0 l @gapw, 0 l 0, @h l -@w, 0 l 0, -@gaph a 1 1 0 0 1 0 -@knob l 0, -@gaph Z'
 };
 
-JigsawPuzzleTile.PATHS_TMP = {
+/** constant {object} Single SVG path border segments */
+JigsawPuzzleTile.PATHS_BORDER = {
   'horizontal-straight': 'l @w, 0',
   'horizontal-up': 'l @gapw, 0 a 1 1 0 0 1 @knob 0 l @gapw, 0',
   'horizontal-down': 'l @gapw, 0 a 1 1 0 0 0 @knob 0 l @gapw, 0',
