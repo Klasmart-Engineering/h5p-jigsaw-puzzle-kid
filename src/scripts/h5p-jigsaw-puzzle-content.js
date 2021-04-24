@@ -33,6 +33,7 @@ export default class JigsawPuzzleContent {
 
     this.callbacks = callbacks;
     this.callbacks.onResize = this.callbacks.onResize || (() => {});
+    this.callbacks.onCompleted = this.callbacks.onCompleted || (() => {});
 
     // Audios
     this.audios = [];
@@ -244,6 +245,28 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Get asset path.
+   * @param {string} truePath HTTP path.
+   * @return {string} Path that H5P can use.
+   */
+  getAssetPath(truePath) {
+    if (truePath.indexOf('sites/default/files/h5p/development') !== -1) {
+      return truePath; // On Drupal dev system, path is okay
+    }
+
+    /*
+     * H5P cannot use the regular path on platforms that use cached assets like
+     * WordPress. We therefore need to build the correct path to the assets
+     * in the library directory ourselves.
+     */
+    const uberName = H5PIntegration.contents[`cid-${this.params.contentId}`].library.split(' ').join('-');
+    const h5pBasePath = H5P.getLibraryPath(uberName);
+    const assetPathEnd = truePath.substr(truePath.indexOf('/assets'));
+
+    return `${h5pBasePath}/dist${assetPathEnd}`;
+  }
+
+  /**
    * Add audios.
    */
   addAudios() {
@@ -258,7 +281,7 @@ export default class JigsawPuzzleContent {
       }
     }
     else if (this.params.sound.backgroundMusic) {
-      backgroundMusic = JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic];
+      backgroundMusic = this.getAssetPath(JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic]);
     }
     if (backgroundMusic) {
       this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
@@ -268,7 +291,7 @@ export default class JigsawPuzzleContent {
       'AudioPuzzleStart', 'AudioPuzzleTilePickUp', 'AudioPuzzleTileCorrect',
       'AudioPuzzleTileIncorrect', 'AudioPuzzleComplete', 'AudioPuzzleHint'
     ].forEach(id => {
-      this.addAudio(id, JigsawPuzzleContent.AUDIOS[id]);
+      this.addAudio(id, this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]));
     });
 
     if (this.params.sound.puzzleTilePickUp && this.params.sound.puzzleTilePickUp.length > 0 && this.params.sound.puzzleTilePickUp[0].path) {
@@ -378,6 +401,7 @@ export default class JigsawPuzzleContent {
   reset() {
     this.tiles.forEach(tile => {
       tile.instance.enable();
+      tile.instance.setDone(false);
       this.randomizeTile(tile.instance);
     });
 
@@ -400,9 +424,9 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Complete puzzle.
+   * Move puzzle tiles to targets
    */
-  completePuzzle() {
+  moveTilesToTarget() {
     this.tiles.forEach(tile => {
       const currentTile = tile.instance;
 
@@ -421,8 +445,6 @@ export default class JigsawPuzzleContent {
       this.hideTileBorders(currentTile);
 
       currentTile.setDone(true);
-
-      this.handlePuzzleCompleted();
     });
   }
 
@@ -659,6 +681,8 @@ export default class JigsawPuzzleContent {
    */
   handlePuzzleCompleted() {
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
+
+    this.callbacks.onCompleted();
   }
 
   /**

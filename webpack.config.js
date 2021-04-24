@@ -29,7 +29,8 @@ module.exports = {
   },
   output: {
     filename: 'h5p-jigsaw-puzzle.js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
+    assetModuleFilename: 'assets/[name][ext][query]'
   },
   target: ['web', 'es5'], // Damn you, IE11!
   module: {
@@ -76,3 +77,6 @@ module.exports = {
   },
   devtool: (isProd) ? undefined : 'eval-cheap-module-source-map'
 };
+
+
+loader: 'file-loader?name=audios/[name].[ext]'

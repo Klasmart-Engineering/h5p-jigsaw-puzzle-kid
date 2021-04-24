@@ -97,6 +97,9 @@ export default class JigsawPuzzle extends H5P.Question {
       {
         onResize: (() => {
           this.handleOnResize();
+        }),
+        onCompleted: (() => {
+          this.handleCompleted();
         })
       }
     );
@@ -333,6 +336,11 @@ export default class JigsawPuzzle extends H5P.Question {
     this.bubblingUpwards = false;
   }
 
+  handleCompleted() {
+    this.hideButton('complete');
+    this.hideButton('hint');
+  }
+
   /**
    * Handle click on button mute/unmute.
    */
@@ -343,9 +351,8 @@ export default class JigsawPuzzle extends H5P.Question {
    * Handle click on button complete.
    */
   handleClickButtonComplete() {
-    this.hideButton('complete');
-    this.hideButton('hint');
-    this.content.completePuzzle();
+    this.content.moveTilesToTarget();
+    this.content.handlePuzzleCompleted();
   }
 
   /**
