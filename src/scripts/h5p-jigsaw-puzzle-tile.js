@@ -450,9 +450,17 @@ export default class JigsawPuzzleTile {
       this.moveInitialY = event.clientY;
     }
 
+    // TODO: Don't get this from DOM here
+    const puzzleArea = document.querySelector('.h5p-jigsaw-puzzle-puzzle-area');
+    const minX = puzzleArea.offsetLeft;
+    const maxX = puzzleArea.offsetLeft + puzzleArea.offsetWidth - this.width;
+
+    const minY = puzzleArea.offsetTop;
+    const maxY = puzzleArea.offsetTop + puzzleArea.offsetHeight - this.height;
+
     this.setPosition({
-      x: this.getPosition().x - deltaX,
-      y: this.getPosition().y - deltaY
+      x: Math.min(Math.max(minX, this.getPosition().x - deltaX), maxX),
+      y: Math.min(Math.max(minY, this.getPosition().y - deltaY), maxY)
     });
 
     this.callbacks.onPuzzleTileMove(this);
