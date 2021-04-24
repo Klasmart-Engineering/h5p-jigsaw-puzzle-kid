@@ -60,6 +60,11 @@ module.exports = {
         type: 'asset/resource'
       },
       {
+        test: /\.mp3|\.wav$/,
+        include: path.join(__dirname, 'src/audio'),
+        type: 'asset/resource'
+      },
+      {
         test: /\.woff$/,
         include: path.join(__dirname, 'src/fonts'),
         type: 'asset/resource'

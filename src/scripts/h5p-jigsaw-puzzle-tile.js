@@ -312,6 +312,14 @@ export default class JigsawPuzzleTile {
   }
 
   /**
+   * Set tile done.
+   * @param {boolean} [done=true] Done state.
+   */
+  setDone(done = true) {
+    this.isDone = done;
+  }
+
+  /**
    * Ghost tile.
    */
   ghost() {

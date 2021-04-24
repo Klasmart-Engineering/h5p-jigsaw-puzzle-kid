@@ -33,11 +33,49 @@
     "fields": [
       {
         "name": "backgroundMusic",
-        "type": "audio",
+        "type": "select",
         "label": "Background Music",
-        "description": "Optional background music",
-        "importance": "low",
+        "description": "Optional background music.",
+        "options": [
+          {
+            "value": "AudioPuzzleDefaultSong1",
+            "label": "Song 1"
+          },
+          {
+            "value": "AudioPuzzleDefaultSong2",
+            "label": "Song 2"
+          },
+          {
+            "value": "AudioPuzzleDefaultSong3",
+            "label": "Song 3"
+          },
+          {
+            "value": "AudioPuzzleDefaultSong4",
+            "label": "Song 4"
+          },
+          {
+            "value": "custom",
+            "label": "Custom"
+          }
+        ],
         "optional": true
+      },
+      {
+        "name": "backgroundMusicCustom",
+        "type": "audio",
+        "label": "Background Music (custom)",
+        "description": "Optional background music.",
+        "importance": "low",
+        "optional": true,
+        "widget": "showWhen",
+        "showWhen": {
+          "rules": [
+            {
+              "field": "backgroundMusic",
+              "equals": "custom"
+            }
+          ]
+        }
       },
       {
         "name": "autoplayBackgroundMusic",
@@ -48,15 +86,15 @@
         "default": false
       },
       {
-        "name": "dropPuzzleTile",
+        "name": "puzzleTilePickUp",
         "type": "audio",
-        "label": "Drop puzzle tile",
-        "description": "Optional sound to play when a puzzle tile is dropped.",
+        "label": "Pick up puzzle tile",
+        "description": "Optional sound to play when a puzzle tile is picked up.",
         "importance": "low",
         "optional": true
       },
       {
-        "name": "matchPuzzleTile",
+        "name": "puzzleTileCorrect",
         "type": "audio",
         "label": "Drop puzzle tile correctly",
         "description": "Optional sound to play when a puzzle tile is dropped in the correct spot.",
@@ -152,6 +190,20 @@
     "importance": "low",
     "fields": [
       {
+        "name": "mute",
+        "type": "text",
+        "label": "Text for \"Mute\" button",
+        "importance": "low",
+        "default": "Mute"
+      },
+      {
+        "name": "unmute",
+        "type": "text",
+        "label": "Text for \"Unmute\" button",
+        "importance": "low",
+        "default": "Unmute"
+      },
+      {
         "name": "complete",
         "type": "text",
         "label": "Text for \"Complete\" button",
@@ -171,6 +223,36 @@
         "type": "text",
         "importance": "low",
         "default": "Retry"
+      }
+    ]
+  },
+  {
+    "name": "a11y",
+    "type": "group",
+    "common": true,
+    "label": "Readspeaker",
+    "importance": "low",
+    "fields": [
+      {
+        "name": "complete",
+        "type": "text",
+        "label": "Assistive technology description for \"Complete\" button",
+        "importance": "low",
+        "default": "Complete the puzzle. All tiles will be put to their correct position."
+      },
+      {
+        "name": "hint",
+        "type": "text",
+        "label": "Assistive technology description for \"Hint\" button",
+        "importance": "low",
+        "default": "Receive a visual hint to where a puzzle tile needs to go."
+      },
+      {
+        "name": "tryAgain",
+        "label": "Assistive technology description for \"Retry\" button",
+        "type": "text",
+        "importance": "low",
+        "default": "Retry the puzzle. All puzzle tiles will be shuffled on the canvas."
       }
     ]
   }

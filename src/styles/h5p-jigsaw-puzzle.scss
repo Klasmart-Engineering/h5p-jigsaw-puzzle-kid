@@ -37,6 +37,14 @@
 
   .h5p-question-buttons {
 
+    .h5p-question-toggle-background-music::before {
+        content: "\F026";
+    }
+
+    .h5p-question-toggle-background-music.mute::before {
+        content: "\F028";
+    }
+
     .h5p-question-complete::before {
         content: "\F11E";
     }

@@ -47,9 +47,16 @@ export default class JigsawPuzzle extends H5P.Question {
         showBackground: true
       },
       l10n: {
+        mute: 'Mute',
+        unmute: 'Unmute',
         complete: 'Complete',
         hint: 'Hint',
         tryAgain: 'Retry'
+      },
+      a11y: {
+        complete: 'Complete the puzzle. All tiles will be put to their correct position.',
+        hint: 'Receive a visual hint to where a puzzle tile needs to go.',
+        tryAgain: 'Retry the puzzle. All puzzle tiles will be shuffled on the canvas.'
       }
     }, this.params);
 
@@ -73,6 +80,7 @@ export default class JigsawPuzzle extends H5P.Question {
   registerDomElements() {
     this.content = new JigsawPuzzleContent(
       {
+        contentId: this.contentId,
         puzzleImageInstance: this.puzzleImageInstance,
         uuid: this.uuid,
         size: {
@@ -83,7 +91,8 @@ export default class JigsawPuzzle extends H5P.Question {
         previousState: this.extras.previousState,
         stroke: Math.max(window.innerWidth / 750, 1.75),
         tileBorderColor: 'rgba(80,80,80,0.5)',
-        showBackground: this.params.behaviour.showBackground
+        showBackground: this.params.behaviour.showBackground,
+        sound: this.params.sound || {}
       },
       {
         onResize: (() => {
@@ -94,6 +103,8 @@ export default class JigsawPuzzle extends H5P.Question {
 
     // Register content with H5P.Question
     this.setContent(this.content.getDOM());
+
+    // TODO: get parent h5p-container and use as basis for query selection
 
     // Register Buttons
     this.addButtons();
@@ -109,23 +120,30 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   addButtons() {
     // Toggle background music button
-    this.addButton('toggle-background-music', '', () => {
-    }, false, {}, {});
+    // this.addButton('toggle-background-music', this.params.l10n.mute, (foo) => {
+    //   this.handleClickMuteButton(foo);
+    // }, true, {this.params.a11y.mute}, {});
 
     // Toggle background music button
     this.addButton('complete', this.params.l10n.complete, () => {
-    }, true, {}, {});
+      this.handleClickButtonComplete();
+    }, this.params.behaviour.enableComplete, {
+      'aria-label': this.params.a11y.complete
+    }, {});
 
     // Toggle background music button
     this.addButton('hint', this.params.l10n.hint, () => {
-    }, true, {}, {});
+      this.handleClickButtonHint();
+    }, this.params.behaviour.enableHint, {
+      'aria-label': this.params.a11y.hint
+    }, {});
 
     // Retry button
     this.addButton('try-again', this.params.l10n.tryAgain, () => {
-      this.resetTask();
-
-      this.trigger('resize');
-    }, true, {}, {});
+      this.handleClickButtonRetry();
+    }, this.params.behaviour.enableRetry, {
+      'aria-label': this.params.a11y.tryAgain
+    }, {});
   }
 
   /**
@@ -161,7 +179,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-4}
    */
   showSolutions() {
-    // TODO: Point to complete function
+    this.handleClickButtonComplete();
 
     this.trigger('resize');
   }
@@ -171,7 +189,17 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-5}
    */
   resetTask() {
+    if (this.params.behaviour.enableComplete) {
+      this.showButton('complete');
+    }
+
+    if (this.params.behaviour.enableHint) {
+      this.showButton('hint');
+    }
+
     this.content.reset();
+
+    this.trigger('resize');
   }
 
   /**
@@ -303,6 +331,35 @@ export default class JigsawPuzzle extends H5P.Question {
 
     // Reset
     this.bubblingUpwards = false;
+  }
+
+  /**
+   * Handle click on button mute/unmute.
+   */
+  handleClickButtonMute() {
+  }
+
+  /**
+   * Handle click on button complete.
+   */
+  handleClickButtonComplete() {
+    this.hideButton('complete');
+    this.hideButton('hint');
+    this.content.completePuzzle();
+  }
+
+  /**
+   * Handle click on button hint.
+   */
+  handleClickButtonHint() {
+    this.content.showHint();
+  }
+
+  /**
+   * Handle click on button retry.
+   */
+  handleClickButtonRetry() {
+    this.resetTask();
   }
 }
 

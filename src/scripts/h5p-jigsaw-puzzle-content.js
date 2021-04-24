@@ -1,5 +1,17 @@
 import JigsawPuzzleTile from './h5p-jigsaw-puzzle-tile';
 
+// Import default audio
+import AudioPuzzleDefaultSong1 from '../audio/puzzle-default-song-1.mp3';
+import AudioPuzzleDefaultSong2 from '../audio/puzzle-default-song-2.mp3';
+import AudioPuzzleDefaultSong3 from '../audio/puzzle-default-song-3.mp3';
+import AudioPuzzleDefaultSong4 from '../audio/puzzle-default-song-4.mp3';
+import AudioPuzzleStart from '../audio/shaky-puzzle.mp3';
+import AudioPuzzleTilePickUp from '../audio/puzzle-tile-pickup.mp3';
+import AudioPuzzleTileCorrect from '../audio/puzzle-tile-correct.mp3';
+import AudioPuzzleTileIncorrect from '../audio/puzzle-tile-incorrect.mp3';
+import AudioPuzzleComplete from '../audio/puzzle-fully-complete.mp3';
+import AudioPuzzleHint from '../audio/puzzle-hint.mp3';
+
 /** Class representing the content */
 export default class JigsawPuzzleContent {
   /**
@@ -22,6 +34,12 @@ export default class JigsawPuzzleContent {
     this.callbacks = callbacks;
     this.callbacks.onResize = this.callbacks.onResize || (() => {});
 
+    // Audios
+    this.audios = [];
+
+    // Audios that should not be stopped when other audios start
+    this.audiosToKeepAlive = ['backgroundMusic'];
+
     // Puzzle tiles, instance + position
     this.tiles = [];
 
@@ -30,6 +48,9 @@ export default class JigsawPuzzleContent {
 
     // Border size;
     this.borderWidth = null;
+
+    // Add audios
+    this.addAudios();
 
     // Main content
     this.content = document.createElement('div');
@@ -223,6 +244,135 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Add audios.
+   */
+  addAudios() {
+    if (!this.params.sound) {
+      return;
+    }
+
+    let backgroundMusic = null;
+    if (this.params.sound.backgroundMusic === 'custom') {
+      if (this.params.sound.backgroundMusicCustom && this.params.sound.backgroundMusicCustom.length > 0 && this.params.sound.backgroundMusicCustom[0].path) {
+        backgroundMusic = H5P.getPath(this.params.sound.backgroundMusicCustom[0].path, this.params.contentId);
+      }
+    }
+    else if (this.params.sound.backgroundMusic) {
+      backgroundMusic = JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic];
+    }
+    if (backgroundMusic) {
+      this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
+    }
+
+    [
+      'AudioPuzzleStart', 'AudioPuzzleTilePickUp', 'AudioPuzzleTileCorrect',
+      'AudioPuzzleTileIncorrect', 'AudioPuzzleComplete', 'AudioPuzzleHint'
+    ].forEach(id => {
+      this.addAudio(id, JigsawPuzzleContent.AUDIOS[id]);
+    });
+
+    if (this.params.sound.puzzleTilePickUp && this.params.sound.puzzleTilePickUp.length > 0 && this.params.sound.puzzleTilePickUp[0].path) {
+      this.addAudio('AudioPuzzleTilePickUp', H5P.getPath(this.params.sound.puzzleTilePickUp[0].path, this.params.contentId));
+    }
+
+    if (this.params.sound.puzzleTileCorrect && this.params.sound.puzzleTileCorrect.length > 0 && this.params.sound.puzzleTileCorrect[0].path) {
+      this.addAudio('AudioPuzzleTileCorrect', H5P.getPath(this.params.sound.puzzleTileCorrect[0].path, this.params.contentId));
+    }
+  }
+
+  /**
+   * Add audio.
+   * @param {string} id Id.
+   * @param {string} path File path.
+   * @param {object} params Extra parameters.
+   */
+  addAudio(id, path, params = {}) {
+    this.removeAudio(id);
+
+    const player = document.createElement('audio');
+    player.style.display = 'none';
+    if (params.loop) {
+      player.loop = true;
+    }
+    if (params.volume) {
+      player.volume = params.volume;
+    }
+    player.src = path;
+    this.audios[id] = {
+      player: player,
+      promise: null
+    };
+  }
+
+  /**
+   * Remove audio.
+   * @param {string} id Id.
+   */
+  removeAudio(id) {
+    delete this.audios[id];
+  }
+
+  /**
+   * Start audio.
+   * @param {string} id Id.
+   * @param {object} [params={}] Paremeters.
+   * @param {boolean} [params.silence] If true, will stop other audios.
+   * @param {string[]} [params.keepAlives] Ids of audios to keep alive when silencing
+   */
+  startAudio(id, params = {}) {
+    if (!this.audios[id]) {
+      return;
+    }
+
+    if (params.silence) {
+      this.stopAudios({keepAlives: params.keepAlives});
+    }
+
+    const currentAudio = this.audios[id];
+    if (!currentAudio) {
+      return;
+    }
+
+    if (!currentAudio.promise) {
+      currentAudio.promise = currentAudio.player.play();
+      currentAudio.promise
+        .finally(() => {
+          currentAudio.promise = null;
+        })
+        .catch(() => {
+          // Browser policy prevents playing
+          console.warn('H5P.JigsawPuzzle: Playing audio is prevented by browser policy');
+        });
+    }
+  }
+
+  /**
+   * Stop audios
+   * @param {object} [params={}] Parameters
+   */
+  stopAudios(params = {}) {
+    for (let audio in this.audios) {
+      if (params?.keepAlives.indexOf(audio) !== -1) {
+        continue; // Ignore audio
+      }
+
+      const currentAudio = this.audios[audio];
+
+      if (currentAudio.promise) {
+        currentAudio.promise.then(() => {
+          currentAudio.player.pause();
+          currentAudio.player.load(); // Reset
+          currentAudio.promise = null;
+        });
+      }
+      else {
+        currentAudio.player.pause();
+        currentAudio.player.load(); // Reset
+      }
+    }
+  }
+
+  /**
    * Reset.
    */
   reset() {
@@ -230,6 +380,8 @@ export default class JigsawPuzzleContent {
       tile.instance.enable();
       this.randomizeTile(tile.instance);
     });
+
+    this.startAudio('AudioPuzzleStart', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -245,6 +397,40 @@ export default class JigsawPuzzleContent {
     const top = Math.max(0, Math.random() * (this.content.offsetHeight - tileSize.height));
 
     this.setTilePosition(tile, left, top);
+  }
+
+  /**
+   * Complete puzzle.
+   */
+  completePuzzle() {
+    this.tiles.forEach(tile => {
+      const currentTile = tile.instance;
+
+      const currentSize = currentTile.getSize();
+      const currentGridPosition = currentTile.getGridPosition();
+
+      const targetPosition = {
+        x: this.puzzleDropzone.offsetLeft + currentGridPosition.x * currentSize.width - Math.sign(currentGridPosition.x) * currentSize.knob / 2 - currentGridPosition.x * currentSize.knob / 2,
+        y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
+      };
+
+      this.setTilePosition(currentTile, targetPosition.x, targetPosition.y);
+
+      currentTile.disable();
+      currentTile.putInBackground();
+      this.hideTileBorders(currentTile);
+
+      currentTile.setDone(true);
+
+      this.handlePuzzleCompleted();
+    });
+  }
+
+  /**
+   * Show hint.
+   */
+  showHint() {
+    this.startAudio('AudioPuzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -360,6 +546,11 @@ export default class JigsawPuzzleContent {
       this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
     }
 
+    // Autoplay backgroundMusic (if not prevented by browser policy)
+    if (this.params.sound.autoplayBackgroundMusic) {
+      this.startAudio('backgroundMusic');
+    }
+
     // Resize now that the content is created
     this.handleResize();
   }
@@ -402,6 +593,8 @@ export default class JigsawPuzzleContent {
     // Put dragged tile on top and unghost
     tile.putOnTop();
     tile.unghost();
+
+    this.startAudio('AudioPuzzleTilePickUp', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -445,9 +638,27 @@ export default class JigsawPuzzleContent {
 
       tile.disable();
       tile.putInBackground();
-
       this.hideTileBorders(tile);
+
+      this.startAudio('AudioPuzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
+      tile.setDone(true);
     }
+    else {
+      tile.setDone(false);
+      this.startAudio('AudioPuzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
+    }
+
+    // Handle completed
+    if (this.tiles.every(tile => tile.instance.isDone)) {
+      this.handlePuzzleCompleted();
+    }
+  }
+
+  /**
+   * Handle puzzle completed.
+   */
+  handlePuzzleCompleted() {
+    this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -460,8 +671,10 @@ export default class JigsawPuzzleContent {
 
     this.content.appendChild(tile.getDOM());
 
-    // When all tiles are loaded, resize
+    // When all tiles are loaded, start
     if (tile.getId() + 1 === this.params.size.width * this.params.size.height) {
+      this.startAudio('AudioPuzzleStart');
+
       window.requestAnimationFrame(() => {
         this.handleResize();
       });
@@ -470,3 +683,17 @@ export default class JigsawPuzzleContent {
 }
 /** @constant {number} Slack factor for snapping tiles to grid */
 JigsawPuzzleContent.slackFactor = 10;
+
+/** @constant {object} Default audio file paths*/
+JigsawPuzzleContent.AUDIOS = {
+  'AudioPuzzleDefaultSong1': AudioPuzzleDefaultSong1,
+  'AudioPuzzleDefaultSong2': AudioPuzzleDefaultSong2,
+  'AudioPuzzleDefaultSong3': AudioPuzzleDefaultSong3,
+  'AudioPuzzleDefaultSong4': AudioPuzzleDefaultSong4,
+  'AudioPuzzleStart': AudioPuzzleStart,
+  'AudioPuzzleTilePickUp': AudioPuzzleTilePickUp,
+  'AudioPuzzleTileCorrect': AudioPuzzleTileCorrect,
+  'AudioPuzzleTileIncorrect': AudioPuzzleTileIncorrect,
+  'AudioPuzzleComplete': AudioPuzzleComplete,
+  'AudioPuzzleHint': AudioPuzzleHint
+};
