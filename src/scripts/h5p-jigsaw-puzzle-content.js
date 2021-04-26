@@ -50,6 +50,8 @@ export default class JigsawPuzzleContent {
     // Border size;
     this.borderWidth = null;
 
+    // this.handleOverlayClicked = this.handleOverlayClicked.bind(this);
+
     // Add audios
     this.addAudios();
 
@@ -71,6 +73,11 @@ export default class JigsawPuzzleContent {
     sortingArea.classList.add('h5p-jigsaw-puzzle-sorting-area');
     sortingArea.style.width = `${(100 * this.params.sortingSpace) / (100 - this.params.sortingSpace)}%`;
     this.content.appendChild(sortingArea);
+
+    this.overlay = document.createElement('div');
+    this.overlay.classList.add('h5p-jigsaw-puzzle-overlay');
+    this.overlay.classList.add('disabled');
+    this.content.appendChild(this.overlay);
 
     // Image to be used for tiles and background
     this.image = document.createElement('img');
@@ -236,7 +243,9 @@ export default class JigsawPuzzleContent {
     params.animate = params.animate ?? false;
 
     if (params.animate) {
-      params.tile.animateMove();
+      params.tile.animateMove({
+        duration: params.duration
+      });
     }
 
     // Required for resizing, relative position of tile in puzzle dropzone
@@ -432,7 +441,7 @@ export default class JigsawPuzzleContent {
       tile: tile,
       x: left,
       y: top,
-      animate: true
+      animate: this.isPuzzleSetUp
     });
   }
 
@@ -471,6 +480,110 @@ export default class JigsawPuzzleContent {
    */
   showHint() {
     this.startAudio('AudioPuzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
+
+    // Put undone tiles in background
+    const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
+    unDoneTiles.forEach(tile => {
+      tile.instance.putInBackground();
+    });
+
+    // Find random tile and put on top
+    const tile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
+    tile.putOnTop();
+
+    // Determine target position
+    const currentSize = tile.getSize();
+    const currentGridPosition = tile.getGridPosition();
+    const currentPosition = tile.getPosition();
+
+    const targetPosition = {
+      x: this.puzzleDropzone.offsetLeft + currentGridPosition.x * currentSize.width - Math.sign(currentGridPosition.x) * currentSize.knob / 2 - currentGridPosition.x * currentSize.knob / 2,
+      y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
+    };
+
+    // Show overlay and reset tile position once clicked
+    this.showOverlay(() => {
+      this.setTilePosition({
+        tile: tile,
+        x: currentPosition.x,
+        y: currentPosition.y,
+        animate: true
+      });
+
+      clearTimeout(this.animateHintTimeout);
+      this.hideOverlay();
+    });
+
+    // Show hint animation
+    this.animateHint({
+      tile: tile,
+      currentPosition: currentPosition,
+      targetPosition: targetPosition
+    });
+  }
+
+  /**
+   * Animate hint.
+   * @param {object} params Parameters.
+   * @param {JigsawPuzzleTile} params.tile Puzzle tile.
+   * @param {object} params.currentPosition Current position.
+   * @param {number} params.currentPosition.x Current position x coordinate.
+   * @param {number} params.currentPosition.y Current position y coordinate.
+   * @param {object} params.targetPosition Target position.
+   * @param {number} params.targetPosition.x Target position x coordinate.
+   * @param {number} params.targetPosition.y Target position y coordinate.
+   * @param {number} [params.duration=1] Animation duration in s.
+   * @param {number} [params.delay=1] Delay between animations in s.
+   * @param {boolean} [params.toTarget=true] If true, animate to target, else to current position.
+   */
+  animateHint(params = {}) {
+    params.duration = params.duration ?? 1;
+    params.delay = params.delay ?? 1;
+    params.toTarget = params.toTarget ?? true;
+
+    if (params.toTarget) {
+      this.setTilePosition({
+        tile: params.tile,
+        x: params.targetPosition.x,
+        y: params.targetPosition.y,
+        animate: true,
+        duration: params.duration
+      });
+    }
+    else {
+      this.setTilePosition({
+        tile: params.tile,
+        x: params.currentPosition.x,
+        y: params.currentPosition.y,
+        animate: true,
+        duration: params.duration
+      });
+    }
+
+    clearTimeout(this.animateHintTimeout);
+    this.animateHintTimeout = setTimeout(() => {
+      params.toTarget = !params.toTarget;
+      this.animateHint(params);
+    }, 1000 * (params.duration + params.delay));
+  }
+
+  /**
+   * Show overlay.
+   * @param {function} callback Callback for overlay clicked.
+   */
+  showOverlay(callback = (() => {})) {
+    this.overlay.clickCallback = callback;
+    this.overlay.addEventListener('click', this.overlay.clickCallback);
+    this.overlay.classList.remove('disabled');
+  }
+
+  /**
+   * Hide overlay.
+   */
+  hideOverlay() {
+    this.overlay.classList.add('disabled');
+    this.overlay.removeEventListener('click', this.overlay.clickCallback);
+    this.overlay.clickCallback = null;
   }
 
   /**
@@ -642,7 +755,7 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileMove() {
-    // TODO: Coule be useful for showing hints
+    // Could be useful for showing hints
   }
 
   /**
@@ -722,6 +835,7 @@ export default class JigsawPuzzleContent {
       this.startAudio('AudioPuzzleStart');
 
       window.requestAnimationFrame(() => {
+        this.isPuzzleSetUp = true;
         this.handleResize();
       });
     }

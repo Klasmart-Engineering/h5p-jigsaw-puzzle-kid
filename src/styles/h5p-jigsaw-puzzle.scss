@@ -37,6 +37,19 @@
         filter: drop-shadow( 1px 1px 1px rgba(0, 0, 0, .5));
       }
     }
+
+    .h5p-jigsaw-puzzle-overlay {
+      height: 100%;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 2;
+
+      &.disabled {
+        display: none;
+      }
+    }
   }
 
   .h5p-question-buttons {

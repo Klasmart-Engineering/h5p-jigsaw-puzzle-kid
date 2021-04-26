@@ -305,9 +305,6 @@ export default class JigsawPuzzleTile {
       return;
     }
 
-    this.tile.style.left = `${position.x / this.params.container.offsetWidth * 100}%`;
-    this.tile.style.top = `${position.y / this.params.container.offsetHeight * 100}%`;
-
     this.tile.style.left = `${position.x}px`;
     this.tile.style.top = `${position.y}px`;
   }
@@ -366,10 +363,18 @@ export default class JigsawPuzzleTile {
 
   /**
    * Animate moving until moving ended.
+   * @param {object} params Parameters.
+   * @param {number} [params.duration=0.5] CSS transition duration in seconds.
    */
-  animateMove() {
+  animateMove(params = {}) {
+    params.duration = params.duration || 0.5;
+
     this.tile.removeEventListener('transitionend', this.handleAnimationMoveEnded);
     this.tile.addEventListener('transitionend', this.handleAnimationMoveEnded);
+    if (params.duration !== 0.5) {
+      this.tile.style.transitionDuration = `${params.duration}s`;
+    }
+
     this.tile.classList.add('animate-move');
   }
 
@@ -491,6 +496,7 @@ export default class JigsawPuzzleTile {
    * Handle moving animation ended.
    */
   handleAnimationMoveEnded() {
+    this.tile.style.transitionDuration = '';
     this.tile.classList.remove('animate-move');
     this.tile.removeEventListener('transitionend', this.handleAnimationMoveEnded);
   }
