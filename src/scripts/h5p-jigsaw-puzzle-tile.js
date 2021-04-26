@@ -38,6 +38,7 @@ export default class JigsawPuzzleTile {
     this.handleTileMoveStart = this.handleTileMoveStart.bind(this);
     this.handleTileMove = this.handleTileMove.bind(this);
     this.handleTileMoveEnd = this.handleTileMoveEnd.bind(this);
+    this.handleAnimationMoveEnded = this.handleAnimationMoveEnded.bind(this);
 
     this.tile = document.createElement('div');
     this.tile.classList.add('h5p-jigsaw-puzzle-tile');
@@ -364,6 +365,15 @@ export default class JigsawPuzzleTile {
   }
 
   /**
+   * Animate moving until moving ended.
+   */
+  animateMove() {
+    this.tile.removeEventListener('transitionend', this.handleAnimationMoveEnded);
+    this.tile.addEventListener('transitionend', this.handleAnimationMoveEnded);
+    this.tile.classList.add('animate-move');
+  }
+
+  /**
    * Repaint the svg content.
    */
   repaintSVG() {
@@ -476,7 +486,17 @@ export default class JigsawPuzzleTile {
 
     this.callbacks.onPuzzleTileMoveEnd(this);
   }
+
+  /**
+   * Handle moving animation ended.
+   */
+  handleAnimationMoveEnded() {
+    this.tile.classList.remove('animate-move');
+    this.tile.removeEventListener('transitionend', this.handleAnimationMoveEnded);
+  }
 }
+
+// TODO: Could this be made simpler by using percentages?
 
 /** constant {object} SVG path for complete tiles */
 JigsawPuzzleTile.PATHS = {

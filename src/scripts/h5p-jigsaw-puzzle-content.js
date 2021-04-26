@@ -214,33 +214,41 @@ export default class JigsawPuzzleContent {
 
   /**
    * Set tile position.
-   * @param {JigsawPuzzleTile} Puzzle tile.
-   * @param {number} x Absolute x position.
-   * @param {number} y Absolute y position.
+   * @param {object} params Parameters.
+   * @param {JigsawPuzzleTile} params.tile Puzzle tile.
+   * @param {number} params.x Absolute x position.
+   * @param {number} params.y Absolute y position.
+   * @param {boolean} [params.animate = false] If true, animate moving.
    */
-  setTilePosition(tile, x, y) {
-    if (!tile) {
+  setTilePosition(params = {}) {
+    if (!params.tile) {
       return;
     }
 
-    if (typeof x !== 'number' || x < 0) {
+    if (typeof params.x !== 'number' || params.x < 0) {
       return;
     }
 
-    if (typeof y !== 'number' || y < 0) {
+    if (typeof params.y !== 'number' || params.y < 0) {
       return;
+    }
+
+    params.animate = params.animate ?? false;
+
+    if (params.animate) {
+      params.tile.animateMove();
     }
 
     // Required for resizing, relative position of tile in puzzle dropzone
-    this.tiles[tile.getId()].position = {
-      x: (x - this.puzzleDropzone.offsetLeft) / this.puzzleDropzone.offsetWidth,
-      y: (y - this.puzzleDropzone.offsetTop) / this.puzzleDropzone.offsetHeight
+    this.tiles[params.tile.getId()].position = {
+      x: (params.x - this.puzzleDropzone.offsetLeft) / this.puzzleDropzone.offsetWidth,
+      y: (params.y - this.puzzleDropzone.offsetTop) / this.puzzleDropzone.offsetHeight
     };
 
     // Absolute tile position on screen
-    tile.setPosition({
-      x: x,
-      y: y
+    params.tile.setPosition({
+      x: params.x,
+      y: params.y
     });
   }
 
@@ -420,7 +428,12 @@ export default class JigsawPuzzleContent {
       Math.max(0, this.content.offsetLeft + this.content.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace / 100) - tileSize.width));
     const top = Math.max(0, Math.random() * (this.content.offsetHeight - tileSize.height));
 
-    this.setTilePosition(tile, left, top);
+    this.setTilePosition({
+      tile: tile,
+      x: left,
+      y: top,
+      animate: true
+    });
   }
 
   /**
@@ -438,7 +451,12 @@ export default class JigsawPuzzleContent {
         y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
       };
 
-      this.setTilePosition(currentTile, targetPosition.x, targetPosition.y);
+      this.setTilePosition({
+        tile: currentTile,
+        x: targetPosition.x,
+        y: targetPosition.y,
+        animate: true
+      });
 
       currentTile.disable();
       currentTile.putInBackground();
@@ -656,7 +674,11 @@ export default class JigsawPuzzleContent {
       (Math.abs(currentPosition.x - targetPosition.x) < slack) &&
       (Math.abs(currentPosition.y - targetPosition.y) < slack)
     ) {
-      this.setTilePosition(tile, targetPosition.x, targetPosition.y);
+      this.setTilePosition({
+        tile: tile,
+        x: targetPosition.x,
+        y: targetPosition.y
+      });
 
       tile.disable();
       tile.putInBackground();
