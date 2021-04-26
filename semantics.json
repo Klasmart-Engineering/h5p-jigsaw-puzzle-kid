@@ -190,20 +190,6 @@
     "importance": "low",
     "fields": [
       {
-        "name": "mute",
-        "type": "text",
-        "label": "Text for \"Mute\" button",
-        "importance": "low",
-        "default": "Mute"
-      },
-      {
-        "name": "unmute",
-        "type": "text",
-        "label": "Text for \"Unmute\" button",
-        "importance": "low",
-        "default": "Unmute"
-      },
-      {
         "name": "complete",
         "type": "text",
         "label": "Text for \"Complete\" button",
@@ -213,9 +199,9 @@
       {
         "name": "hint",
         "type": "text",
-        "label": "Text for \"Hint\" button",
+        "label": "Text for \"Show hint\" button",
         "importance": "low",
-        "default": "Hint"
+        "default": "Show hint"
       },
       {
         "name": "tryAgain",
@@ -243,7 +229,7 @@
       {
         "name": "hint",
         "type": "text",
-        "label": "Assistive technology description for \"Hint\" button",
+        "label": "Assistive technology description for \"Show hint\" button",
         "importance": "low",
         "default": "Receive a visual hint to where a puzzle tile needs to go."
       },
@@ -253,6 +239,34 @@
         "type": "text",
         "importance": "low",
         "default": "Retry the puzzle. All puzzle tiles will be shuffled on the canvas."
+      },
+      {
+        "name": "buttonFullscreenEnter",
+        "type": "text",
+        "label": "Assistive technology description for \"Enter fullscreen button\"",
+        "importance": "low",
+        "default": "Enter fullscreen mode"
+      },
+      {
+        "name": "buttonFullscreenExit",
+        "type": "text",
+        "label": "Assistive technology description for \"Exit fullscreen button\"",
+        "importance": "low",
+        "default": "Exit fullscreen mode"
+      },
+      {
+        "name": "buttonAudioMute",
+        "type": "text",
+        "label": "Assistive technology description for \"Mute\" button",
+        "importance": "low",
+        "default": "Mute background music"
+      },
+      {
+        "name": "buttonAudioUnmute",
+        "type": "text",
+        "label": "Assistive technology description for \"Unmute\" button",
+        "importance": "low",
+        "default": "Unmute background music"
       }
     ]
   }

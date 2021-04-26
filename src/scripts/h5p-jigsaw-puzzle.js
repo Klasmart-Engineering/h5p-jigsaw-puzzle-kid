@@ -47,13 +47,15 @@ export default class JigsawPuzzle extends H5P.Question {
         showBackground: true
       },
       l10n: {
-        mute: 'Mute',
-        unmute: 'Unmute',
         complete: 'Complete',
         hint: 'Hint',
         tryAgain: 'Retry'
       },
       a11y: {
+        buttonFullscreenEnter: 'Enter fullscreen mode',
+        buttonFullscreenExit: 'Exit fullscreen mode',
+        buttonAudioMute: 'Mute background music',
+        buttonAudioUnmute: 'Unmute background music',
         complete: 'Complete the puzzle. All tiles will be put to their correct position.',
         hint: 'Receive a visual hint to where a puzzle tile needs to go.',
         tryAgain: 'Retry the puzzle. All puzzle tiles will be shuffled on the canvas.'
@@ -92,7 +94,14 @@ export default class JigsawPuzzle extends H5P.Question {
         stroke: Math.max(window.innerWidth / 750, 1.75),
         tileBorderColor: 'rgba(80,80,80,0.5)',
         showBackground: this.params.behaviour.showBackground,
-        sound: this.params.sound || {}
+        sound: this.params.sound || {},
+        timeLimit: this.params.behaviour.timeLimit || null,
+        a11y: {
+          buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
+          buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
+          buttonAudioMute: this.params.a11y.buttonAudioMute,
+          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute
+        }
       },
       {
         onResize: (() => {

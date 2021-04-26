@@ -1,0 +1,47 @@
+@import './../../styles/h5p-jigsaw-puzzle-main.scss';
+
+.h5p-jigsaw-puzzle-status-info {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  height: 3em;
+  width: 100%;
+
+  .h5p-jigsaw-puzzle-status {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    margin-right: 1em;
+
+    &.hidden {
+      display: none;
+    }
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    .h5p-jigsaw-puzzle-status-icon {
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 1.2em 1.2em;
+      flex-shrink: 0;
+      height: 1.2em;
+      width: 1.2em;
+      margin-right: 0.3em;
+
+      &.h5p-jigsaw-puzzle-status-icon-time {
+        background-image: url("./../../images/button-time-icon-blue.svg");
+      }
+
+      &.h5p-jigsaw-puzzle-status-icon-hint {
+        background-image: url("./../../images/button-hint-icon-blue.svg");
+      }
+    }
+
+    .h5p-jigsaw-puzzle-status-strong {
+      font-weight: bold;
+      margin-right: 0.3em;
+    }
+  }
+}

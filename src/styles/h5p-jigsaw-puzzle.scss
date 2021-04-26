@@ -1,40 +1,18 @@
+@import './h5p-jigsaw-puzzle-main.scss';
+
 .h5p-jigsaw-puzzle {
 
-  .h5p-jigsaw-puzzle-puzzle-area {
-    display: flex;
-    flex-direction: row;
+  .h5p-jigsaw-puzzle-content {
 
-    .h5p-jigsaw-puzzle-tile-container {
-      background-size: cover;
-      border: 2px solid #808080;
-      width: 100%;
-    }
+    .h5p-jigsaw-puzzle-puzzle-area {
+      display: flex;
+      flex-direction: row;
 
-    .h5p-jigsaw-puzzle-tile {
-      position: absolute;
-
-      &:not([disabled]) {
-        cursor: move;
-      }
-
-      &[disabled] {
-        z-index: -1;
-      }
-
-      &.onTop {
-        z-index: 1;
-      }
-
-      &.ghosted {
-        opacity: 0;
-      }
-
-      &.animate-move {
-        transition: left 0.5s, top 0.5s;
-      }
-
-      svg {
-        filter: drop-shadow( 1px 1px 1px rgba(0, 0, 0, .5));
+      .h5p-jigsaw-puzzle-tile-container {
+        background-size: cover;
+        border: $border-width-normal solid $color-grey-0-10;
+        box-shadow: $box-shadow-normal;
+        width: 100%;
       }
     }
 

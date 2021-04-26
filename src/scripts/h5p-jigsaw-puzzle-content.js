@@ -1,4 +1,5 @@
-import JigsawPuzzleTile from './h5p-jigsaw-puzzle-tile';
+import JigsawPuzzleTile from './components/h5p-jigsaw-puzzle-tile';
+import JiggsawPuzzleTitlebar from './components/h5p-jigsaw-puzzle-titlebar';
 
 // Import default audio
 import AudioPuzzleDefaultSong1 from '../audio/puzzle-default-song-1.mp3';
@@ -50,6 +51,9 @@ export default class JigsawPuzzleContent {
     // Border size;
     this.borderWidth = null;
 
+    // Counter for hints used.
+    this.hintsUsed = 0;
+
     // this.handleOverlayClicked = this.handleOverlayClicked.bind(this);
 
     // Add audios
@@ -57,7 +61,38 @@ export default class JigsawPuzzleContent {
 
     // Main content
     this.content = document.createElement('div');
-    this.content.classList.add('h5p-jigsaw-puzzle-puzzle-area');
+    this.content.classList.add('h5p-jigsaw-puzzle-content');
+
+    // Titlebar
+    this.titlebar = new JiggsawPuzzleTitlebar(
+      {
+        a11y: {
+          buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
+          buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
+          buttonAudioMute: this.params.a11y.buttonAudioMute,
+          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute
+        }
+      },
+      {
+        onButtonAudioClicked: ((event) => {
+          this.handleButtonAudioClicked(event);
+        })
+      }
+    );
+
+    // Set hints used in titlebar
+    this.titlebar.setHintsUsed(this.hintsUsed);
+
+    if (this.params.timeLimit) {
+      this.titlebar.setTimeLeft('...');
+    }
+
+    this.content.appendChild(this.titlebar.getDOM());
+
+    // Puzzle area
+    this.puzzleArea = document.createElement('div');
+    this.puzzleArea.classList.add('h5p-jigsaw-puzzle-puzzle-area');
+    this.content.appendChild(this.puzzleArea);
 
     // Area where puzzle tiles need to be put
     this.puzzleDropzone = document.createElement('div');
@@ -66,13 +101,13 @@ export default class JigsawPuzzleContent {
       const styles = window.getComputedStyle(this.puzzleDropzone);
       this.borderWidth = parseFloat(styles.getPropertyValue('border-width'));
     });
-    this.content.appendChild(this.puzzleDropzone);
+    this.puzzleArea.appendChild(this.puzzleDropzone);
 
     // Optional sorting area for better overview
     const sortingArea = document.createElement('div');
     sortingArea.classList.add('h5p-jigsaw-puzzle-sorting-area');
     sortingArea.style.width = `${(100 * this.params.sortingSpace) / (100 - this.params.sortingSpace)}%`;
-    this.content.appendChild(sortingArea);
+    this.puzzleArea.appendChild(sortingArea);
 
     this.overlay = document.createElement('div');
     this.overlay.classList.add('h5p-jigsaw-puzzle-overlay');
@@ -200,7 +235,7 @@ export default class JigsawPuzzleContent {
         borderColor: this.params.tileBorderColor,
         borders: borders,
         uuid: this.params.uuid,
-        container: this.content
+        container: this.puzzleArea
       },
       {
         onPuzzleTileCreated: ((tile) => {
@@ -382,7 +417,34 @@ export default class JigsawPuzzleContent {
         .catch(() => {
           // Browser policy prevents playing
           console.warn('H5P.JigsawPuzzle: Playing audio is prevented by browser policy');
+          if (id === 'backgroundMusic') {
+            this.titlebar.toggleAudioButton('mute');
+          }
         });
+    }
+  }
+
+  /**
+   * Stop audio.
+   * @param {string} id Id.
+   */
+  stopAudio(id) {
+    if (!this.audios[id]) {
+      return;
+    }
+
+    const currentAudio = this.audios[id];
+
+    if (currentAudio.promise) {
+      currentAudio.promise.then(() => {
+        currentAudio.player.pause();
+        currentAudio.player.load(); // Reset
+        currentAudio.promise = null;
+      });
+    }
+    else {
+      currentAudio.player.pause();
+      currentAudio.player.load(); // Reset
     }
   }
 
@@ -396,20 +458,26 @@ export default class JigsawPuzzleContent {
         continue; // Ignore audio
       }
 
-      const currentAudio = this.audios[audio];
-
-      if (currentAudio.promise) {
-        currentAudio.promise.then(() => {
-          currentAudio.player.pause();
-          currentAudio.player.load(); // Reset
-          currentAudio.promise = null;
-        });
-      }
-      else {
-        currentAudio.player.pause();
-        currentAudio.player.load(); // Reset
-      }
+      this.stopAudio(audio);
     }
+  }
+
+  /**
+   * Run timer.
+   */
+  runTimer() {
+    this.titlebar.setTimeLeft(this.timeLeft);
+
+    if (this.timeLeft === 0) {
+      this.handleTimeUp();
+      return;
+    }
+
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.timeLeft--;
+      this.runTimer();
+    }, 1000);
   }
 
   /**
@@ -422,6 +490,14 @@ export default class JigsawPuzzleContent {
       this.randomizeTile(tile.instance);
     });
 
+    this.hintsUsed = 0;
+    this.titlebar.setHintsUsed(this.hintsUsed);
+
+    if (this.params.timeLimit) {
+      this.timeLeft = this.params.timeLimit;
+      this.runTimer();
+    }
+
     this.startAudio('AudioPuzzleStart', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
@@ -432,10 +508,10 @@ export default class JigsawPuzzleContent {
   randomizeTile(tile) {
     // Position tile randomly depending on space available
     const tileSize = tile.getSize();
-    const left = (this.content.offsetWidth * this.params.sortingSpace / 100 < tileSize.width) ?
-      Math.max(0, Math.random() * (this.content.offsetWidth - tile.getSize().width)) :
-      Math.max(0, this.content.offsetLeft + this.content.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.content.offsetWidth * (1 - this.params.sortingSpace / 100) - tileSize.width));
-    const top = Math.max(0, Math.random() * (this.content.offsetHeight - tileSize.height));
+    const left = (this.puzzleArea.offsetWidth * this.params.sortingSpace / 100 < tileSize.width) ?
+      Math.max(0, Math.random() * (this.puzzleArea.offsetWidth - tile.getSize().width)) :
+      Math.max(0, this.puzzleArea.offsetLeft + this.puzzleArea.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.puzzleArea.offsetWidth * (1 - this.params.sortingSpace / 100) - tileSize.width));
+    const top = Math.max(this.puzzleArea.offsetTop, Math.random() * (this.puzzleArea.offsetTop + this.puzzleArea.offsetHeight - tileSize.height));
 
     this.setTilePosition({
       tile: tile,
@@ -479,6 +555,9 @@ export default class JigsawPuzzleContent {
    * Show hint.
    */
   showHint() {
+    this.hintsUsed++;
+    this.titlebar.setHintsUsed(this.hintsUsed);
+
     this.startAudio('AudioPuzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     // Put undone tiles in background
@@ -701,7 +780,15 @@ export default class JigsawPuzzleContent {
 
     // Autoplay backgroundMusic (if not prevented by browser policy)
     if (this.params.sound.autoplayBackgroundMusic) {
+      this.titlebar.enableAudioButton();
+      this.titlebar.toggleAudioButton('unmute');
       this.startAudio('backgroundMusic');
+    }
+
+    // Start timer
+    if (this.params.timeLimit) {
+      this.timeLeft = this.params.timeLimit;
+      this.runTimer();
     }
 
     // Resize now that the content is created
@@ -811,10 +898,20 @@ export default class JigsawPuzzleContent {
     }
   }
 
+  handleButtonAudioClicked(event) {
+    if ([...event?.currentTarget.classList].indexOf('h5p-jigsaw-puzzle-button-active') !== -1) {
+      this.startAudio('backgroundMusic');
+    }
+    else {
+      this.stopAudio('backgroundMusic');
+    }
+  }
+
   /**
    * Handle puzzle completed.
    */
   handlePuzzleCompleted() {
+    clearTimeout(this.timer);
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     this.callbacks.onCompleted();
@@ -828,7 +925,7 @@ export default class JigsawPuzzleContent {
     // Position tile randomly depending on space available
     this.randomizeTile(tile);
 
-    this.content.appendChild(tile.getDOM());
+    this.puzzleArea.appendChild(tile.getDOM());
 
     // When all tiles are loaded, start
     if (tile.getId() + 1 === this.params.size.width * this.params.size.height) {
@@ -839,6 +936,13 @@ export default class JigsawPuzzleContent {
         this.handleResize();
       });
     }
+  }
+
+  /**
+   * Handle time up.
+   */
+  handleTimeUp() {
+    // TODO: ...
   }
 }
 /** @constant {number} Slack factor for snapping tiles to grid */
