@@ -14,6 +14,10 @@
   padding: 0;
   width: 3.6em;
 
+  &.h5p-jigsaw-puzzle-display-none {
+    display: none;
+  }
+
   &:not(.h5p-jigsaw-puzzle-button-disabled) {
     &:hover {
       background-color: $color-base-05;
@@ -42,10 +46,6 @@
     background-color: $color-base-05;
     background-image: url("./../../images/button-enter-fullscreen-icon-blue.svg");
 
-    &.h5p-jigsaw-puzzle-button-disabled {
-      display: none;
-    }
-
     &:not(.h5p-jigsaw-puzzle-disabled):hover {
       background-color: $color-base-10;
     }
@@ -71,10 +71,6 @@
   &.h5p-jigsaw-puzzle-button-audio {
     background-color: $color-base-05;
     background-image: url("./../../images/button-audio-muted-icon-blue.svg");
-
-    &.h5p-jigsaw-puzzle-button-disabled {
-      display: none;
-    }
 
     &:not(.h5p-jigsaw-puzzle-disabled):hover {
       background-color: $color-base-10;

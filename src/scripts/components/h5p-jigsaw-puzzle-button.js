@@ -22,7 +22,9 @@ export default class JigsawPuzzleButton {
       active: false,
       classes: [],
       disabled: false,
-      type: 'pulse'
+      hidden: false,
+      type: 'pulse',
+      noTabWhenDisabled: false
     }, params || {});
 
     if (!Array.isArray(this.params.classes)) {
@@ -70,6 +72,13 @@ export default class JigsawPuzzleButton {
       this.enable();
     }
 
+    if (this.params.hidden === true) {
+      this.hide();
+    }
+    else {
+      this.show();
+    }
+
     this.button.addEventListener('click', (event) => {
       if (this.disabled) {
         return;
@@ -111,6 +120,9 @@ export default class JigsawPuzzleButton {
     this.disabled = false;
 
     this.button.classList.remove('h5p-jigsaw-puzzle-button-disabled');
+    if (this.params.noTabWhenDisabled) {
+      this.button.setAttribute('tabindex', 0);
+    }
 
     if (this.active) {
       this.activate();
@@ -126,6 +138,9 @@ export default class JigsawPuzzleButton {
   disable() {
     this.button.classList.add('h5p-jigsaw-puzzle-button-disabled');
     this.button.setAttribute('aria-label', this.params.a11y.disabled);
+    if (this.params.noTabWhenDisabled) {
+      this.button.setAttribute('tabindex', -1);
+    }
 
     this.disabled = true;
   }

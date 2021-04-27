@@ -55,9 +55,12 @@ export default class JiggsawPuzzleTitlebar {
           'h5p-jigsaw-puzzle-button-audio'
         ],
         disabled: true,
+        noTabWhenDisabled: true,
+        hidden: true,
         a11y: {
           active: this.params.a11y.buttonAudioMute,
-          inactive: this.params.a11y.buttonAudioUnmute
+          inactive: this.params.a11y.buttonAudioUnmute,
+          disabled: this.params.a11y.disabled
         }
       },
       {
@@ -77,9 +80,12 @@ export default class JiggsawPuzzleTitlebar {
           'h5p-jigsaw-puzzle-button-fullscreen'
         ],
         disabled: true,
+        noTabWhenDisabled: true,
+        hidden: true,
         a11y: {
           active: this.params.a11y.buttonFullscreenExit,
-          inactive: this.params.a11y.buttonFullscreenEnter
+          inactive: this.params.a11y.buttonFullscreenEnter,
+          disabled: this.params.a11y.disabled
         }
       },
       {
@@ -113,6 +119,34 @@ export default class JiggsawPuzzleTitlebar {
    */
   setTimeLeft(time) {
     this.statusInfo.setTimeLeft(time);
+  }
+
+  /**
+   * Show fullscreen button.
+   */
+  showFullscreenButton() {
+    this.buttonFullscreen.show();
+  }
+
+  /**
+   * Show audio button.
+   */
+  showAudioButton() {
+    this.buttonAudio.show();
+  }
+
+  /**
+   * Disable fullscreen button.
+   */
+  disableFullscreenButton() {
+    this.buttonFullscreen.disable();
+  }
+
+  /**
+   * Disable audio button.
+   */
+  disableAudioButton() {
+    this.buttonAudio.disable();
   }
 
   /**

@@ -58,7 +58,9 @@ export default class JigsawPuzzle extends H5P.Question {
         buttonAudioUnmute: 'Unmute background music',
         complete: 'Complete the puzzle. All tiles will be put to their correct position.',
         hint: 'Receive a visual hint to where a puzzle tile needs to go.',
-        tryAgain: 'Retry the puzzle. All puzzle tiles will be shuffled on the canvas.'
+        tryAgain: 'Retry the puzzle. All puzzle tiles will be shuffled on the canvas.',
+        disabled: 'Disabled',
+        close: 'Close'
       }
     }, this.params);
 
@@ -101,7 +103,9 @@ export default class JigsawPuzzle extends H5P.Question {
           buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
           buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
           buttonAudioMute: this.params.a11y.buttonAudioMute,
-          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute
+          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute,
+          disabled: this.params.a11y.disabled,
+          close: this.params.a11y.close
         }
       },
       {
@@ -127,12 +131,16 @@ export default class JigsawPuzzle extends H5P.Question {
 
     // Wait for content DOM to be completed
     if (document.readyState === 'complete') {
-      this.handleInitialized();
+      window.requestAnimationFrame(() => {
+        this.handleInitialized();
+      });
     }
     else {
       document.addEventListener('readystatechange', () => {
         if (document.readyState === 'complete') {
-          this.handleInitialized();
+          window.requestAnimationFrame(() => {
+            this.handleInitialized();
+          });
         }
       });
     }
@@ -171,6 +179,50 @@ export default class JigsawPuzzle extends H5P.Question {
     }, this.params.behaviour.enableRetry, {
       'aria-label': this.params.a11y.tryAgain
     }, {});
+  }
+
+  /**
+   * Disable all buttons.
+   */
+  disableButtons() {
+    for (let id in this.buttons) {
+      this.disableButton(id);
+    }
+  }
+
+  /**
+   * Disable a button.
+   * @param {string} id Id of button to disable.
+   */
+  disableButton(id) {
+    if (!this.buttons[id]) {
+      return;
+    }
+
+    this.buttons[id].setAttribute('disabled', true);
+    this.buttons[id].classList.add('disabled');
+  }
+
+  /**
+   * Enable all buttons.
+   */
+  enableButtons() {
+    for (let id in this.buttons) {
+      this.enableButton(id);
+    }
+  }
+
+  /**
+   * Enable a button.
+   * @param {string} id Id of button to enable.
+   */
+  enableButton(id) {
+    if (!this.buttons[id]) {
+      return;
+    }
+
+    this.buttons[id].removeAttribute('disabled');
+    this.buttons[id].classList.remove('disabled');
   }
 
   /**
@@ -387,6 +439,11 @@ export default class JigsawPuzzle extends H5P.Question {
       this.on('exitFullScreen', () => {
         this.content.toggleFullscreen(false);
       });
+
+      this.buttons = {};
+      this.buttons['complete'] = this.container.querySelector('.h5p-question-complete');
+      this.buttons['hint'] = this.container.querySelector('.h5p-question-hint');
+      this.buttons['try-again'] = this.container.querySelector('.h5p-question-try-again');
     }
   }
 
@@ -434,7 +491,10 @@ export default class JigsawPuzzle extends H5P.Question {
    * Handle click on button hint.
    */
   handleClickButtonHint() {
-    this.content.showHint();
+    this.content.showHint(() => {
+      this.enableButtons();
+    });
+    this.disableButtons();
   }
 
   /**

@@ -267,6 +267,20 @@
         "label": "Assistive technology description for \"Unmute\" button",
         "importance": "low",
         "default": "Unmute background music"
+      },
+      {
+        "name": "disabled",
+        "type": "text",
+        "label": "Assistive technology description for \"Disabled\"",
+        "importance": "low",
+        "default": "Disabled"
+      },
+      {
+        "name": "close",
+        "type": "text",
+        "label": "Assistive technology description for \"Close\"",
+        "importance": "low",
+        "default": "Close"
       }
     ]
   }

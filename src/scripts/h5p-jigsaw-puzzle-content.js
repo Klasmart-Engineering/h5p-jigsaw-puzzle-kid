@@ -58,9 +58,6 @@ export default class JigsawPuzzleContent {
     // Time left
     this.timeLeft = this.params.previousState?.timeLeft ?? this.params.timeLimit;
 
-    // Add audios
-    this.addAudios();
-
     // Main content
     this.content = document.createElement('div');
     this.content.classList.add('h5p-jigsaw-puzzle-content');
@@ -72,7 +69,8 @@ export default class JigsawPuzzleContent {
           buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
           buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
           buttonAudioMute: this.params.a11y.buttonAudioMute,
-          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute
+          buttonAudioUnmute: this.params.a11y.buttonAudioUnmute,
+          disabled: this.params.a11y.disabled
         }
       },
       {
@@ -114,7 +112,7 @@ export default class JigsawPuzzleContent {
     sortingArea.style.width = `${(100 * this.params.sortingSpace) / (100 - this.params.sortingSpace)}%`;
     this.puzzleArea.appendChild(sortingArea);
 
-    this.overlay = document.createElement('div');
+    this.overlay = document.createElement('button');
     this.overlay.classList.add('h5p-jigsaw-puzzle-overlay');
     this.overlay.classList.add('disabled');
     this.content.appendChild(this.overlay);
@@ -129,6 +127,9 @@ export default class JigsawPuzzleContent {
       'Anonymous';
     this.image.src = params.puzzleImageInstance.source;
     this.canvas = document.createElement('canvas');
+
+    // Add audios
+    this.addAudios();
   }
 
   /**
@@ -353,6 +354,7 @@ export default class JigsawPuzzleContent {
       backgroundMusic = this.getAssetPath(JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic]);
     }
     if (backgroundMusic) {
+      this.titlebar.showAudioButton();
       this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
     }
 
@@ -484,6 +486,7 @@ export default class JigsawPuzzleContent {
    */
   enableFullscreenButton() {
     this.titlebar.enableFullscreenButton();
+    this.titlebar.showFullscreenButton();
   }
 
   /**
@@ -624,10 +627,13 @@ export default class JigsawPuzzleContent {
 
   /**
    * Show hint.
+   * @param {function} [callback] Callback when done.
    */
-  showHint() {
+  showHint(callback = (() => {})) {
     this.hintsUsed++;
     this.titlebar.setHintsUsed(this.hintsUsed);
+    this.titlebar.disableAudioButton();
+    this.titlebar.disableFullscreenButton();
 
     this.startAudio('AudioPuzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
 
@@ -660,9 +666,15 @@ export default class JigsawPuzzleContent {
         animate: true
       });
 
+      this.titlebar.enableAudioButton();
+      this.titlebar.enableFullscreenButton();
+
       clearTimeout(this.animateHintTimeout);
       this.hideOverlay();
       tile.hideHint();
+
+      // Inform caller that hinting is done
+      callback();
     });
 
     tile.showHint();
@@ -726,8 +738,11 @@ export default class JigsawPuzzleContent {
    */
   showOverlay(callback = (() => {})) {
     this.overlay.clickCallback = callback;
+    this.overlay.setAttribute('tabindex', 0);
+    this.overlay.setAttribute('aria-label', this.params.a11y.close);
     this.overlay.addEventListener('click', this.overlay.clickCallback);
     this.overlay.classList.remove('disabled');
+    this.overlay.focus();
   }
 
   /**
@@ -735,6 +750,8 @@ export default class JigsawPuzzleContent {
    */
   hideOverlay() {
     this.overlay.classList.add('disabled');
+    this.overlay.setAttribute('tabindex', -1);
+    this.overlay.setAttribute('aria-label', '');
     this.overlay.removeEventListener('click', this.overlay.clickCallback);
     this.overlay.clickCallback = null;
   }
