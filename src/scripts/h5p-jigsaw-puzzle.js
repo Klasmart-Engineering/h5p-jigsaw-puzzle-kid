@@ -294,7 +294,6 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   showSolutions() {
     this.handleClickButtonComplete({xAPI: false});
-
     this.trigger('resize');
   }
 
@@ -336,6 +335,35 @@ export default class JigsawPuzzle extends H5P.Question {
 
     xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this,
       true, this.isPassed());
+
+    return xAPIEvent;
+  }
+
+  /**
+   * Build xAPI pressed event.
+   * @param {string} purpose Purpose of pressed key
+   * @return {H5P.XAPIEvent} XAPI answer event.
+   */
+  getXAPIPressedEvent(purpose) {
+    const xAPIEvent = this.createXAPIEvent('');
+
+    /*
+     * Verb not in allow list of H5P core
+     * Cmp. http://xapi.vocab.pub/verbs/
+     * Cmp. http://xapi.vocab.pub/describe/?url=https://w3id.org/xapi/seriousgames/verbs/pressed
+     */
+    xAPIEvent.data.statement.verb = {
+      'id': 'https://w3id.org/xapi/seriousgames/verbs/pressed',
+      'display': {
+        'en-US': 'pressed'
+      }
+    };
+
+    /*
+     * Extension to specify what was pressed
+     * @see https://registry.tincanapi.com/#uri/extension/468
+     */
+    xAPIEvent.data.statement.object.definition.extensions['http://id.tincanapi.com/extension/purpose'] = purpose;
 
     return xAPIEvent;
   }
@@ -474,6 +502,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * Handle click on button complete.
    */
   handleClickButtonComplete(params) {
+    this.trigger(this.getXAPIPressedEvent('complete'));
     this.content.handlePuzzleCompleted(params);
     this.content.finishTiles();
   }
@@ -482,6 +511,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * Handle click on button hint.
    */
   handleClickButtonHint() {
+    this.trigger(this.getXAPIPressedEvent('show hint'));
     this.content.showHint(() => {
       this.enableButtons();
     });
