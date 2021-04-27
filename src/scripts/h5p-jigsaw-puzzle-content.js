@@ -55,7 +55,7 @@ export default class JigsawPuzzleContent {
     this.hintsUsed = this.params.previousState?.hintsUsed || 0;
 
     // Time left
-    this.timeLeft = this.params.previousState?.timeLeft || this.params.timeLimit;
+    this.timeLeft = this.params.previousState?.timeLeft ?? this.params.timeLimit;
 
     // Add audios
     this.addAudios();
