@@ -335,7 +335,6 @@ export default class JigsawPuzzleTile {
    */
   showHint() {
     this.isShowingHint = true;
-    this.disable();
     this.tile.classList.add('hint');
   }
 
@@ -344,7 +343,6 @@ export default class JigsawPuzzleTile {
    */
   hideHint() {
     this.tile.classList.remove('hint');
-    this.enable();
     this.isShowingHint = false;
   }
 

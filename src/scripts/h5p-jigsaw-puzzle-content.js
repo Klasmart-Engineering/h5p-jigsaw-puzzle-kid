@@ -689,6 +689,7 @@ export default class JigsawPuzzleContent {
    */
   finalizeTile(tile) {
     tile.disable();
+    tile.hideHint();
     tile.putInBackground();
     this.hideTileBorders(tile);
     tile.setDone(true);
@@ -749,6 +750,7 @@ export default class JigsawPuzzleContent {
       clearTimeout(this.animateHintTimeout);
       this.hideOverlay();
       tile.hideHint();
+      tile.enable();
 
       this.runAttentionGrabber();
 
@@ -756,6 +758,7 @@ export default class JigsawPuzzleContent {
       this.callbacks.onHintDone();
     });
 
+    tile.disable();
     tile.showHint();
 
     // Show hint animation
@@ -816,6 +819,7 @@ export default class JigsawPuzzleContent {
    * @param {function} callback Callback for overlay clicked.
    */
   showOverlay(callback = (() => {})) {
+    this.isOverlayShowing = true;
     this.overlay.clickCallback = callback;
     this.overlay.setAttribute('tabindex', 0);
     this.overlay.setAttribute('aria-label', this.params.a11y.close);
@@ -833,6 +837,7 @@ export default class JigsawPuzzleContent {
     this.overlay.setAttribute('aria-label', '');
     this.overlay.removeEventListener('click', this.overlay.clickCallback);
     this.overlay.clickCallback = null;
+    this.isOverlayShowing = false;
   }
 
   /**
@@ -1116,7 +1121,6 @@ export default class JigsawPuzzleContent {
 
     // Handle completed
     if (this.tiles.every(tile => tile.instance.isDone)) {
-      this.stopAttentionGrabber();
       this.handlePuzzleCompleted({xAPI: true});
     }
     else {
@@ -1148,6 +1152,15 @@ export default class JigsawPuzzleContent {
    * Handle puzzle completed.
    */
   handlePuzzleCompleted(params) {
+    if (this.isOverlayShowing) {
+      this.titlebar.enableAudioButton();
+      this.titlebar.enableFullscreenButton();
+
+      clearTimeout(this.animateHintTimeout);
+      this.hideOverlay();
+      this.callbacks.onHintDone();
+    }
+
     clearTimeout(this.timer);
     this.stopAttentionGrabber();
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
@@ -1187,8 +1200,8 @@ export default class JigsawPuzzleContent {
    * Handle time up.
    */
   handleTimeUp() {
-    // TODO: Stop attentionWorker
-    // TODO: ...
+    this.finishTiles();
+    this.handlePuzzleCompleted({xAPI: true});
   }
 }
 /** @constant {number} Slack factor for snapping tiles to grid */
