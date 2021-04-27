@@ -263,6 +263,9 @@ export default class JigsawPuzzleContent {
         }),
         onPuzzleTileMoveEnd: ((tile) => {
           this.handlePuzzleTileMoveEnd(tile);
+        }),
+        onCloseHint: (() => {
+          this.overlay.click();
         })
       }
     );
@@ -658,7 +661,10 @@ export default class JigsawPuzzleContent {
 
       clearTimeout(this.animateHintTimeout);
       this.hideOverlay();
+      tile.hideHint();
     });
+
+    tile.showHint();
 
     // Show hint animation
     this.animateHint({
@@ -684,7 +690,7 @@ export default class JigsawPuzzleContent {
    */
   animateHint(params = {}) {
     params.duration = params.duration ?? 1;
-    params.delay = params.delay ?? 1;
+    params.delay = params.delay ?? 0.75;
     params.toTarget = params.toTarget ?? true;
 
     if (params.toTarget) {

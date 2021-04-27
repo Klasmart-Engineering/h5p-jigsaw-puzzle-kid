@@ -9,14 +9,20 @@
       flex-direction: row;
 
       .h5p-jigsaw-puzzle-tile-container {
+        background-color: white;
         background-size: cover;
         border: $border-width-normal solid $color-grey-0-10;
         box-shadow: $box-shadow-normal;
         width: 100%;
+
+        &.hint {
+          z-index: 3;
+        }
       }
     }
 
     .h5p-jigsaw-puzzle-overlay {
+      background-color: $color-grey-0-30;
       height: 100%;
       left: 0;
       position: absolute;

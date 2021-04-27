@@ -6,17 +6,22 @@
 
     .h5p-jigsaw-puzzle-tile {
       position: absolute;
+      z-index: 1;
 
       &:not([disabled]) {
         cursor: move;
       }
 
       &[disabled] {
-        z-index: -1;
+        z-index: 0;
       }
 
       &.onTop {
-        z-index: 1;
+        z-index: 2;
+      }
+
+      &.hint {
+        z-index: 3;
       }
 
       &.ghosted {

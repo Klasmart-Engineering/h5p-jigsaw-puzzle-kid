@@ -21,6 +21,7 @@ export default class JigsawPuzzleTile {
     this.callbacks.onPuzzleTileMoveStart = this.callbacks.onPuzzleTileMoveStart || (() => {});
     this.callbacks.onPuzzleTileMove = this.callbacks.onPuzzleTileMove || (() => {});
     this.callbacks.onPuzzleTileMoveEnd = this.callbacks.onPuzzleTileMoveEnd || (() => {});
+    this.callbacks.onCloseHint = this.callbacks.onCloseHint || (() => {});
 
     this.pathBorders = {};
 
@@ -330,6 +331,24 @@ export default class JigsawPuzzleTile {
   }
 
   /**
+   * Show hint.
+   */
+  showHint() {
+    this.isShowingHint = true;
+    this.disable();
+    this.tile.classList.add('hint');
+  }
+
+  /**
+   * Hide hint.
+   */
+  hideHint() {
+    this.tile.classList.remove('hint');
+    this.enable();
+    this.isShowingHint = false;
+  }
+
+  /**
    * Ghost tile.
    */
   ghost() {
@@ -431,6 +450,9 @@ export default class JigsawPuzzleTile {
    */
   handleTileMoveStart(event) {
     if (this.isDisabled) {
+      if (this.isShowingHint) {
+        this.callbacks.onCloseHint();
+      }
       return;
     }
 
