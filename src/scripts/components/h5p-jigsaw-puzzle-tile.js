@@ -309,8 +309,16 @@ export default class JigsawPuzzleTile {
       return;
     }
 
-    this.tile.style.left = `${position.x}px`;
-    this.tile.style.top = `${position.y}px`;
+    // TODO: Don't get this from DOM here
+    const puzzleArea = document.querySelector('.h5p-jigsaw-puzzle-puzzle-area');
+    const minX = puzzleArea.offsetLeft;
+    const maxX = puzzleArea.offsetLeft + puzzleArea.offsetWidth - this.width;
+
+    const minY = puzzleArea.offsetTop;
+    const maxY = puzzleArea.offsetTop + puzzleArea.offsetHeight - this.height;
+
+    this.tile.style.left = `${Math.min(Math.max(minX, position.x), maxX)}px`;
+    this.tile.style.top = `${Math.min(Math.max(minY, position.y), maxY)}px`;
   }
 
   /**
@@ -469,17 +477,9 @@ export default class JigsawPuzzleTile {
       this.moveInitialY = event.clientY;
     }
 
-    // TODO: Don't get this from DOM here
-    const puzzleArea = document.querySelector('.h5p-jigsaw-puzzle-puzzle-area');
-    const minX = puzzleArea.offsetLeft;
-    const maxX = puzzleArea.offsetLeft + puzzleArea.offsetWidth - this.width;
-
-    const minY = puzzleArea.offsetTop;
-    const maxY = puzzleArea.offsetTop + puzzleArea.offsetHeight - this.height;
-
     this.setPosition({
-      x: Math.min(Math.max(minX, this.getPosition().x - deltaX), maxX),
-      y: Math.min(Math.max(minY, this.getPosition().y - deltaY), maxY)
+      x: this.getPosition().x - deltaX,
+      y: this.getPosition().y - deltaY
     });
 
     this.callbacks.onPuzzleTileMove(this);

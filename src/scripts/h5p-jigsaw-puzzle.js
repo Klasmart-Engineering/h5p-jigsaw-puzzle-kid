@@ -84,6 +84,7 @@ export default class JigsawPuzzle extends H5P.Question {
       {
         contentId: this.contentId,
         puzzleImageInstance: this.puzzleImageInstance,
+        imageFormat: this.params.puzzleImage.params.file.mime,
         uuid: this.uuid,
         size: {
           width: this.params.tilesHorizontal,
@@ -109,6 +110,9 @@ export default class JigsawPuzzle extends H5P.Question {
         }),
         onCompleted: (() => {
           this.handleCompleted();
+        }),
+        onButtonFullscreenClicked: (() => {
+          this.toggleFullscreen();
         })
       }
     );
@@ -121,10 +125,26 @@ export default class JigsawPuzzle extends H5P.Question {
     // Register Buttons
     this.addButtons();
 
-    /*
-     * H5P.Question also offers some more functions that could be used.
-     * Consult https://github.com/h5p/h5p-question for details
-     */
+    // Wait for content DOM to be completed
+    if (document.readyState === 'complete') {
+      this.handleInitialized();
+    }
+    else {
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'complete') {
+          this.handleInitialized();
+        }
+      });
+    }
+
+    // Resize fullscreen dimensions when rotating screen
+    window.addEventListener('orientationchange', () => {
+      if (H5P.isFullscreen) {
+        setTimeout(() => { // Needs time to rotate for window.innerHeight
+          this.content.setFixedHeight(true);
+        }, 200);
+      }
+    }, false);
   }
 
   /**
@@ -151,6 +171,42 @@ export default class JigsawPuzzle extends H5P.Question {
     }, this.params.behaviour.enableRetry, {
       'aria-label': this.params.a11y.tryAgain
     }, {});
+  }
+
+  /**
+   * Toggle fullscreen button.
+   * @param {string|boolean} state enter|false for enter, exit|true for exit.
+   */
+  toggleFullscreen(state) {
+    if (!this.container) {
+      return;
+    }
+
+    if (typeof state === 'string') {
+      if (state === 'enter') {
+        state = false;
+      }
+      else if (state === 'exit') {
+        state = true;
+      }
+    }
+
+    if (typeof state !== 'boolean') {
+      state = !H5P.isFullscreen;
+    }
+
+    if (state === true) {
+      H5P.fullScreen(H5P.jQuery(this.container), this);
+    }
+    else {
+      H5P.exitFullScreen();
+      setTimeout(() => {
+        this.trigger('resize');
+      }, 100); // Small images
+      setTimeout(() => {
+        this.trigger('resize');
+      }, 500); // Large images take more time
+    }
   }
 
   /**
@@ -311,6 +367,27 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   getCurrentState() {
     return this.content.getCurrentState();
+  }
+
+  /**
+   * Handle content initialized
+   */
+  handleInitialized() {
+    // Add fullscreen button on first call after H5P.Question has created the DOM
+    this.container = document.querySelector('.h5p-container');
+    if (this.container) {
+      this.content.enableFullscreenButton();
+
+      this.on('enterFullScreen', () => {
+        setTimeout(() => { // Needs time to get into fullscreen for window.innerHeight
+          this.content.toggleFullscreen(true);
+        }, 200);
+      });
+
+      this.on('exitFullScreen', () => {
+        this.content.toggleFullscreen(false);
+      });
+    }
   }
 
   /**

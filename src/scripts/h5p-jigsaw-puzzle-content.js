@@ -35,6 +35,7 @@ export default class JigsawPuzzleContent {
     this.callbacks = callbacks;
     this.callbacks.onResize = this.callbacks.onResize || (() => {});
     this.callbacks.onCompleted = this.callbacks.onCompleted || (() => {});
+    this.callbacks.onButtonFullscreenClicked = this.callbacks.onButtonFullscreenClicked || (() => {});
 
     // Audios
     this.audios = [];
@@ -77,6 +78,9 @@ export default class JigsawPuzzleContent {
       {
         onButtonAudioClicked: ((event) => {
           this.handleButtonAudioClicked(event);
+        }),
+        onButtonFullscreenClicked: ((event) => {
+          this.handleButtonFullscreenClicked(event);
         })
       }
     );
@@ -118,7 +122,7 @@ export default class JigsawPuzzleContent {
     // Image to be used for tiles and background
     this.image = document.createElement('img');
     this.image.addEventListener('load', () => {
-      this.handleImageLoaded();
+      this.handleImageLoaded(this.params.imageFormat);
     });
     this.imageCrossOrigin = typeof H5P.getCrossOrigin === 'function' ?
       H5P.getCrossOrigin(params.puzzleImageInstance.source) :
@@ -137,27 +141,34 @@ export default class JigsawPuzzleContent {
 
   /**
    * Get cropped image.
-   * @param {HTMLElement} canvas Canvas.
-   * @param {number} x Start position x.
-   * @param {number} y Start position y.
-   * @param {number} width Width.
-   * @param {number} height Height.
+   * @param {HTMLElement} params.canvas Canvas.
+   * @param {number} params.x Start position x.
+   * @param {number} params.y Start position y.
+   * @param {number} params.width Width.
+   * @param {number} params.height Height.
+   * @param {string} [params.format='image/png'] Image format.
    * @return {string} Image source base64.
    */
-  getCroppedImageSrc(canvas, x, y, width, height) {
+  getCroppedImageSrc(params = {}) {
     const canvasBuffer = document.createElement('canvas');
     const canvasBufferContext = canvasBuffer.getContext('2d');
-    canvasBuffer.width = width;
-    canvasBuffer.height = height;
+    canvasBuffer.width = params.width;
+    canvasBuffer.height = params.height;
 
     canvasBufferContext.beginPath();
-    canvasBufferContext.rect(0, 0, width, height);
+    canvasBufferContext.rect(0, 0, params.width, params.height);
     canvasBufferContext.fillStyle = 'white';
     canvasBufferContext.fill();
 
-    canvasBufferContext.drawImage(canvas, x, y, width, height, 0, 0, width, height);
+    canvasBufferContext.drawImage(
+      params.canvas,
+      params.x, params.y,
+      params.width, params.height,
+      0, 0,
+      params.width, params.height
+    );
 
-    return canvasBuffer.toDataURL();
+    return canvasBuffer.toDataURL(params.format);
   }
 
   /**
@@ -165,6 +176,7 @@ export default class JigsawPuzzleContent {
    * @param {object} params Parameters.
    * @param {number} params.x Tile grid position horizontally.
    * @param {number} params.y Tile grid position vertically.
+   * @param {string} [params.format] Image format.
    * @return {JigsawPuzzleTile} Puzzle tile.
    */
   createPuzzleTile(params) {
@@ -212,13 +224,14 @@ export default class JigsawPuzzleContent {
     const type = `${verticalAlignment}-${horizontalAlignment}`;
 
     // Image
-    const imageSource = this.getCroppedImageSrc(
-      this.canvas,
-      params.x * baseWidth - Math.sign(params.x) * knobSize / 2,
-      params.y * baseHeight - Math.sign(params.y) * knobSize / 2,
-      tileWidth,
-      tileHeight
-    );
+    const imageSource = this.getCroppedImageSrc({
+      canvas: this.canvas,
+      x: params.x * baseWidth - Math.sign(params.x) * knobSize / 2,
+      y: params.y * baseHeight - Math.sign(params.y) * knobSize / 2,
+      width: tileWidth,
+      height: tileHeight,
+      format: params.format
+    });
 
     return new JigsawPuzzleTile(
       {
@@ -461,6 +474,45 @@ export default class JigsawPuzzleContent {
 
       this.stopAudio(audio);
     }
+  }
+
+  /**
+   * Enable fullscreen button in titlebar.
+   */
+  enableFullscreenButton() {
+    this.titlebar.enableFullscreenButton();
+  }
+
+  /**
+   * Set dimensions to fullscreen.
+   * @param {boolean} enterFullScreen If true, enter fullscreen, else exit.
+   */
+  toggleFullscreen(enterFullScreen = false) {
+    this.titlebar.toggleFullscreenButton(enterFullScreen);
+
+    this.setFixedHeight(enterFullScreen);
+  }
+
+  /**
+   * Set dimensions to fullscreen.
+   * @param {boolean} enterFullScreen If true, enter fullscreen, else exit.
+   */
+  setFixedHeight(enterFullScreen = false) {
+    if (enterFullScreen) {
+      // TODO: Get rid of query selectors
+      const styleContent = window.getComputedStyle(document.querySelector('.h5p-question-content'));
+      const marginContent = parseFloat(styleContent.getPropertyValue('margin-bottom'));
+
+      const styleButtons = window.getComputedStyle(document.querySelector('.h5p-question-buttons'));
+      const marginButtons = parseFloat(styleButtons.getPropertyValue('margin-bottom')) + parseFloat(styleButtons.getPropertyValue('margin-top'));
+
+      this.maxHeight = window.innerHeight - 2 * this.params.stroke - this.puzzleArea.offsetTop - marginContent - marginButtons - document.querySelector('.h5p-question-buttons').offsetHeight;
+    }
+    else {
+      this.maxHeight = null;
+    }
+
+    this.handleResize();
   }
 
   /**
@@ -769,7 +821,7 @@ export default class JigsawPuzzleContent {
   /**
    * Handle puzzle image loaded.
    */
-  handleImageLoaded() {
+  handleImageLoaded(format) {
     this.originalSize = {
       width: this.image.naturalWidth,
       height: this.image.naturalHeight
@@ -787,7 +839,8 @@ export default class JigsawPuzzleContent {
         this.tiles.push({
           instance: this.createPuzzleTile({
             x: x,
-            y: y
+            y: y,
+            format: format
           }),
           position: {
             x: 0,
@@ -832,8 +885,20 @@ export default class JigsawPuzzleContent {
    */
   handleResize() {
     if (this.originalSize) {
-      this.scale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
-      this.puzzleDropzone.style.height = `${this.scale * this.originalSize.height - this.borderWidth}px`;
+
+      // maxHeight is used in fullscreen mode
+      if (this.maxHeight && this.originalSize.height > this.originalSize.width) {
+        this.scale = (this.maxHeight - this.borderWidth) / this.originalSize.height;
+        this.puzzleDropzone.style.height = `${this.maxHeight - 2 * this.borderWidth}px`;
+        this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - this.borderWidth}px`;
+        this.puzzleDropzone.style.flexShrink = 0;
+      }
+      else {
+        this.scale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
+        this.puzzleDropzone.style.height = `${this.scale * this.originalSize.height - this.borderWidth}px`;
+        this.puzzleDropzone.style.width = '';
+        this.puzzleDropzone.style.flexShrink = '';
+      }
 
       this.tiles.forEach(tile => {
         tile.instance.setScale(this.scale);
@@ -930,6 +995,10 @@ export default class JigsawPuzzleContent {
     }
   }
 
+  /**
+   * Handle audio button clicked.
+   * @param {Event} event Event.
+   */
   handleButtonAudioClicked(event) {
     if ([...event?.currentTarget.classList].indexOf('h5p-jigsaw-puzzle-button-active') !== -1) {
       this.startAudio('backgroundMusic');
@@ -937,6 +1006,13 @@ export default class JigsawPuzzleContent {
     else {
       this.stopAudio('backgroundMusic');
     }
+  }
+
+  /**
+   * Handle fullscreen button clicked.
+   */
+  handleButtonFullscreenClicked() {
+    this.callbacks.onButtonFullscreenClicked();
   }
 
   /**
@@ -970,7 +1046,9 @@ export default class JigsawPuzzleContent {
 
       window.requestAnimationFrame(() => {
         this.isPuzzleSetUp = true;
-        this.handleResize();
+        setTimeout(() => {
+          this.handleResize();
+        }, 100); // For large images
       });
     }
   }
