@@ -421,7 +421,7 @@ export default class JigsawPuzzleTile {
 
     this.callbacks.onPuzzleTileCreated(this);
 
-    this.tile.addEventListener('touchstart', this.handleElementMoveStart, false);
+    this.tile.addEventListener('touchstart', this.handleTileMoveStart);
     this.tile.addEventListener('mousedown', this.handleTileMoveStart, false);
   }
 
@@ -448,7 +448,9 @@ export default class JigsawPuzzleTile {
     }
 
     document.addEventListener('mousemove', this.handleTileMove);
+    document.addEventListener('touchmove', this.handleTileMove);
     document.addEventListener('mouseup', this.handleTileMoveEnd);
+    document.addEventListener('touchend', this.handleTileMoveEnd);
 
     this.callbacks.onPuzzleTileMoveStart(this);
   }
@@ -459,7 +461,6 @@ export default class JigsawPuzzleTile {
    */
   handleTileMove(event) {
     event = event || window.event;
-    event.preventDefault();
 
     let deltaX = 0;
     let deltaY = 0;
@@ -491,7 +492,9 @@ export default class JigsawPuzzleTile {
    */
   handleTileMoveEnd() {
     document.removeEventListener('mousemove', this.handleTileMove);
+    document.removeEventListener('touchmove', this.handleTileMove);
     document.removeEventListener('mouseup', this.handleTileMoveEnd);
+    document.removeEventListener('touchend', this.handleTileMoveEnd);
 
     this.callbacks.onPuzzleTileMoveEnd(this);
   }
