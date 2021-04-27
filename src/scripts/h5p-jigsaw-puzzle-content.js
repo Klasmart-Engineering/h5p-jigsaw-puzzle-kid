@@ -1200,8 +1200,8 @@ export default class JigsawPuzzleContent {
    * Handle time up.
    */
   handleTimeUp() {
-    this.finishTiles();
     this.handlePuzzleCompleted({xAPI: true});
+    this.finishTiles();
   }
 }
 /** @constant {number} Slack factor for snapping tiles to grid */
