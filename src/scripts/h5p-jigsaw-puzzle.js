@@ -23,10 +23,6 @@ export default class JigsawPuzzle extends H5P.Question {
   constructor(params, contentId, extras = {}) {
     super('jigsaw-puzzle'); // CSS class selector for content's iframe: h5p-jigsaw-puzzle
 
-    this.params = params;
-    this.contentId = contentId;
-    this.extras = extras;
-
     /*
      * this.params.behaviour.enableSolutionsButton and this.params.behaviour.enableRetry
      * are used by H5P's question type contract.
@@ -62,7 +58,10 @@ export default class JigsawPuzzle extends H5P.Question {
         disabled: 'Disabled',
         close: 'Close'
       }
-    }, this.params);
+    }, params);
+
+    this.contentId = contentId;
+    this.extras = extras;
 
     // this.previousState now holds the saved content state of the previous session
     this.previousState = this.extras.previousState || {};
@@ -99,6 +98,7 @@ export default class JigsawPuzzle extends H5P.Question {
         showBackground: this.params.behaviour.showBackground,
         sound: this.params.sound || {},
         timeLimit: this.params.behaviour.timeLimit || null,
+        attentionSeeker: this.params.behaviour.attentionSeeker,
         a11y: {
           buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
           buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
@@ -117,6 +117,9 @@ export default class JigsawPuzzle extends H5P.Question {
         }),
         onButtonFullscreenClicked: (() => {
           this.toggleFullscreen();
+        }),
+        onHintDone: (() => {
+          this.handleHintDone();
         })
       }
     );
@@ -512,10 +515,24 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   handleClickButtonHint() {
     this.trigger(this.getXAPIPressedEvent('show hint'));
-    this.content.showHint(() => {
-      this.enableButtons();
-    });
+    this.content.incrementHintCounter();
+    this.handleHintStart();
+  }
+
+  /**
+   * Handle hint start.
+   */
+  handleHintStart() {
     this.disableButtons();
+    this.content.stopAttentionGrabber();
+    this.content.showHint();
+  }
+
+  /**
+   * Handle hint done.
+   */
+  handleHintDone() {
+    this.enableButtons();
   }
 
   /**

@@ -36,6 +36,7 @@ export default class JigsawPuzzleContent {
     this.callbacks.onResize = this.callbacks.onResize || (() => {});
     this.callbacks.onCompleted = this.callbacks.onCompleted || (() => {});
     this.callbacks.onButtonFullscreenClicked = this.callbacks.onButtonFullscreenClicked || (() => {});
+    this.callbacks.onHintDone = this.callbacks.onHintDone || (() => {});
 
     // Audios
     this.audios = [];
@@ -133,6 +134,9 @@ export default class JigsawPuzzleContent {
 
     // Add audios
     this.addAudios();
+
+    // Attention seeker manager for elements
+    this.attentionSeeker = new H5P.AttentionSeeker();
   }
 
   /**
@@ -543,6 +547,58 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Stop attention grabber.
+   */
+  stopAttentionGrabber() {
+    clearTimeout(this.attentionWorker);
+    this.attentionSeeker.unregisterAll();
+  }
+
+  /**
+   * Run attention grabber.
+   * Will first use an attention seeker after interval complete, then
+   * use a hint.
+   * @param {string} [state=null] Determines what to use.
+   */
+  runAttentionGrabber(state = null) {
+    if (this.params.attentionSeeker?.interval > this.timeLeft) {
+      return;
+    }
+
+    // Stop previous attention grabber
+    if (!state) {
+      this.stopAttentionGrabber();
+
+      this.attentionWorker = setTimeout(() => {
+        const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
+        unDoneTiles.forEach(tile => {
+          tile.instance.putInBackground();
+        });
+        this.attentionTile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
+        const workerId = this.attentionSeeker.register({
+          element: this.attentionTile.getDOM(),
+          style: this.params.attentionSeeker.style,
+          interval: 0,
+          repeat: 1
+        });
+        this.attentionTile.putOnTop();
+
+        this.attentionSeeker.run(workerId);
+
+        this.runAttentionGrabber('hint');
+
+      }, this.params.attentionSeeker.interval * 1000);
+    }
+    else if (state === 'hint') {
+      clearTimeout(this.attentionWorker);
+
+      this.attentionWorker = setTimeout(() => {
+        this.showHint(this.attentionTile);
+      }, this.params.attentionSeeker.interval * 1000);
+    }
+  }
+
+  /**
    * Reset.
    */
   reset() {
@@ -559,6 +615,7 @@ export default class JigsawPuzzleContent {
     if (this.params.timeLimit) {
       this.timeLeft = this.params.timeLimit;
       this.runTimer();
+      this.runAttentionGrabber();
     }
 
     this.startAudio('AudioPuzzleStart', {silence: true, keepAlives: this.audiosToKeepAlive});
@@ -622,20 +679,34 @@ export default class JigsawPuzzleContent {
     tiles.forEach(tile => {
       this.moveTileToTarget(tile.instance, {animate: params.animate});
 
-      tile.instance.disable();
-      tile.instance.putInBackground();
-      this.hideTileBorders(tile.instance);
-      tile.instance.setDone(true);
+      this.finalizeTile(tile.instance);
     });
   }
 
   /**
-   * Show hint.
-   * @param {function} [callback] Callback when done.
+   * Finalize tile.
+   * @param {JigsawPuzzleTile} tile Tile to be finalized.
    */
-  showHint(callback = (() => {})) {
+  finalizeTile(tile) {
+    tile.disable();
+    tile.putInBackground();
+    this.hideTileBorders(tile);
+    tile.setDone(true);
+  }
+
+  /**
+   * Incement the hint counter by one.
+   */
+  incrementHintCounter() {
     this.hintsUsed++;
     this.titlebar.setHintsUsed(this.hintsUsed);
+  }
+
+  /**
+   * Show hint.
+   * @param {JigsawPuzzleTile} [tile] Tile to use for hint, otherwise random tile.
+   */
+  showHint(tile) {
     this.titlebar.disableAudioButton();
     this.titlebar.disableFullscreenButton();
 
@@ -647,8 +718,10 @@ export default class JigsawPuzzleContent {
       tile.instance.putInBackground();
     });
 
-    // Find random tile and put on top
-    const tile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
+    // Use valid tile or find random tile and put on top
+    if (!tile || !unDoneTiles.some(undoneTile => undoneTile.instance.getId() === tile.getId())) {
+      tile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
+    }
     tile.putOnTop();
 
     // Determine target position
@@ -677,8 +750,10 @@ export default class JigsawPuzzleContent {
       this.hideOverlay();
       tile.hideHint();
 
+      this.runAttentionGrabber();
+
       // Inform caller that hinting is done
-      callback();
+      this.callbacks.onHintDone();
     });
 
     tile.showHint();
@@ -918,6 +993,7 @@ export default class JigsawPuzzleContent {
     // Start timer
     if (this.timeLeft > 0) {
       this.runTimer();
+      this.runAttentionGrabber();
     }
 
     // Resize now that the content is created
@@ -966,6 +1042,9 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileMoveStart(tile) {
+    clearTimeout(this.attentionWorker);
+    this.attentionSeeker.unregisterAll();
+
     // Ghost all enabled tiles to allow comfortable positioning
     this.tiles.forEach(tile => {
       tile.instance.putInBackground();
@@ -1024,12 +1103,9 @@ export default class JigsawPuzzleContent {
         y: targetPosition.y
       });
 
-      tile.disable();
-      tile.putInBackground();
-      this.hideTileBorders(tile);
+      this.finalizeTile(tile);
 
       this.startAudio('AudioPuzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
-      tile.setDone(true);
     }
     else {
       tile.setDone(false);
@@ -1040,7 +1116,11 @@ export default class JigsawPuzzleContent {
 
     // Handle completed
     if (this.tiles.every(tile => tile.instance.isDone)) {
+      this.stopAttentionGrabber();
       this.handlePuzzleCompleted({xAPI: true});
+    }
+    else {
+      this.runAttentionGrabber();
     }
   }
 
@@ -1069,6 +1149,7 @@ export default class JigsawPuzzleContent {
    */
   handlePuzzleCompleted(params) {
     clearTimeout(this.timer);
+    this.stopAttentionGrabber();
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     this.callbacks.onCompleted(params);
@@ -1106,6 +1187,7 @@ export default class JigsawPuzzleContent {
    * Handle time up.
    */
   handleTimeUp() {
+    // TODO: Stop attentionWorker
     // TODO: ...
   }
 }
