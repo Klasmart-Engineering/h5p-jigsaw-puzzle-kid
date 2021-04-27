@@ -893,16 +893,19 @@ export default class JigsawPuzzleContent {
   handleResize() {
     if (this.originalSize) {
 
-      // maxHeight is used in fullscreen mode
-      if (this.maxHeight && this.originalSize.height > this.originalSize.width) {
+      const regularScale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
+      const regularHeight = regularScale * this.originalSize.height - this.borderWidth;
+
+      // maxHeight is set in fullscreen mode
+      if (this.maxHeight && regularHeight > this.maxHeight) {
         this.scale = (this.maxHeight - this.borderWidth) / this.originalSize.height;
         this.puzzleDropzone.style.height = `${this.maxHeight - 2 * this.borderWidth}px`;
         this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - this.borderWidth}px`;
         this.puzzleDropzone.style.flexShrink = 0;
       }
       else {
-        this.scale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
-        this.puzzleDropzone.style.height = `${this.scale * this.originalSize.height - this.borderWidth}px`;
+        this.scale = regularScale;
+        this.puzzleDropzone.style.height = `${regularHeight}px`;
         this.puzzleDropzone.style.width = '';
         this.puzzleDropzone.style.flexShrink = '';
       }
