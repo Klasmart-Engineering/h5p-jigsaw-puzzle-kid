@@ -550,6 +550,7 @@ export default class JigsawPuzzleContent {
     this.titlebar.setHintsUsed(this.hintsUsed);
 
     if (this.params.timeLimit) {
+      this.timeLeft = this.params.timeLimit;
       this.runTimer();
     }
 
