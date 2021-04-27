@@ -58,6 +58,9 @@ export default class JigsawPuzzleContent {
     // Time left
     this.timeLeft = this.params.previousState?.timeLeft ?? this.params.timeLimit;
 
+    // Answer given
+    this.isAnswerGiven = false;
+
     // Main content
     this.content = document.createElement('div');
     this.content.classList.add('h5p-jigsaw-puzzle-content');
@@ -551,6 +554,7 @@ export default class JigsawPuzzleContent {
 
     this.hintsUsed = 0;
     this.titlebar.setHintsUsed(this.hintsUsed);
+    this.isAnswerGiven = false;
 
     if (this.params.timeLimit) {
       this.timeLeft = this.params.timeLimit;
@@ -828,6 +832,22 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Check if result has been submitted or input has been given.
+   * @return {boolean} True, if answer was given.
+   */
+  getAnswerGiven() {
+    return this.isAnswerGiven;
+  }
+
+  /**
+   * Get latest score.
+   * @return {number} latest score.
+   */
+  getScore() {
+    return this.tiles.reduce((sum, tile) => sum + (tile.instance.isDone ? 1 : 0), 0);
+  }
+
+  /**
    * Get current state
    * @return {object} Current state.
    */
@@ -1016,9 +1036,11 @@ export default class JigsawPuzzleContent {
       this.startAudio('AudioPuzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
 
+    this.isAnswerGiven = true;
+
     // Handle completed
     if (this.tiles.every(tile => tile.instance.isDone)) {
-      this.handlePuzzleCompleted();
+      this.handlePuzzleCompleted({xAPI: true});
     }
   }
 
@@ -1045,11 +1067,11 @@ export default class JigsawPuzzleContent {
   /**
    * Handle puzzle completed.
    */
-  handlePuzzleCompleted() {
+  handlePuzzleCompleted(params) {
     clearTimeout(this.timer);
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
 
-    this.callbacks.onCompleted();
+    this.callbacks.onCompleted(params);
   }
 
   /**
