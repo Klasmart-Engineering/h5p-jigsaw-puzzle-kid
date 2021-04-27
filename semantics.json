@@ -122,7 +122,7 @@
       {
         "name": "timeAffordances",
         "label": "Time to affordances",
-        "description": "Set an optional time limit in seconds until the user is shown where one of the tiles needs to go.",
+        "description": "Set an optional time interval in seconds after that help is triggered.",
         "type": "number",
         "importance": "low",
         "optional": true,

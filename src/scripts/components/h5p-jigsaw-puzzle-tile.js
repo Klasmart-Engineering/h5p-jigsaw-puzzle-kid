@@ -29,6 +29,8 @@ export default class JigsawPuzzleTile {
     this.deltaX = null;
     this.deltaY = null;
 
+    this.isDone = false;
+
     this.backgroundImage = new Image();
     this.backgroundImage.addEventListener('load', () => {
       this.handleImageLoaded();

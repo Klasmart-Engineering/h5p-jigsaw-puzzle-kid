@@ -52,9 +52,10 @@ export default class JigsawPuzzleContent {
     this.borderWidth = null;
 
     // Counter for hints used.
-    this.hintsUsed = 0;
+    this.hintsUsed = this.params.previousState?.hintsUsed || 0;
 
-    // this.handleOverlayClicked = this.handleOverlayClicked.bind(this);
+    // Time left
+    this.timeLeft = this.params.previousState?.timeLeft || this.params.timeLimit;
 
     // Add audios
     this.addAudios();
@@ -494,7 +495,6 @@ export default class JigsawPuzzleContent {
     this.titlebar.setHintsUsed(this.hintsUsed);
 
     if (this.params.timeLimit) {
-      this.timeLeft = this.params.timeLimit;
       this.runTimer();
     }
 
@@ -522,32 +522,47 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Move puzzle tiles to targets
+   * Move a tile to its target position.
+   * @param {JigsawPuzzleTile} tileInstance Tile instance.
+   * @param {object} [params] Parameters.
+   * @param {boolean} [params.animate=false] If true, animate moving.
    */
-  moveTilesToTarget() {
-    this.tiles.forEach(tile => {
-      const currentTile = tile.instance;
+  moveTileToTarget(tileInstance, params = {}) {
+    params.animate = params.animate ?? false;
 
-      const currentSize = currentTile.getSize();
-      const currentGridPosition = currentTile.getGridPosition();
+    const currentSize = tileInstance.getSize();
+    const currentGridPosition = tileInstance.getGridPosition();
 
-      const targetPosition = {
-        x: this.puzzleDropzone.offsetLeft + currentGridPosition.x * currentSize.width - Math.sign(currentGridPosition.x) * currentSize.knob / 2 - currentGridPosition.x * currentSize.knob / 2,
-        y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
-      };
+    const targetPosition = {
+      x: this.puzzleDropzone.offsetLeft + currentGridPosition.x * currentSize.width - Math.sign(currentGridPosition.x) * currentSize.knob / 2 - currentGridPosition.x * currentSize.knob / 2,
+      y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
+    };
 
-      this.setTilePosition({
-        tile: currentTile,
-        x: targetPosition.x,
-        y: targetPosition.y,
-        animate: true
-      });
+    this.setTilePosition({
+      tile: tileInstance,
+      x: targetPosition.x,
+      y: targetPosition.y,
+      animate: params.animate
+    });
+  }
 
-      currentTile.disable();
-      currentTile.putInBackground();
-      this.hideTileBorders(currentTile);
+  /**
+   * Move puzzle tiles to targets.
+   * @param {JigsawPuzzleTile[]} [tiles] Tiles to move to target.
+   * @param {object} [params={}] Parameters.
+   * @param {boolean} [params.animate=false] If true, animate.
+   */
+  finishTiles(tiles, params = {}) {
+    tiles = tiles ? tiles.map(tile => ({instance: tile})) : this.tiles;
+    params.animate = params.animate ?? true;
 
-      currentTile.setDone(true);
+    tiles.forEach(tile => {
+      this.moveTileToTarget(tile.instance, {animate: params.animate});
+
+      tile.instance.disable();
+      tile.instance.putInBackground();
+      this.hideTileBorders(tile.instance);
+      tile.instance.setDone(true);
     });
   }
 
@@ -737,6 +752,21 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Get current state
+   * @return {object} Current state.
+   */
+  getCurrentState() {
+    const currentState = {
+      timeLeft: this.timeLeft,
+      hintsUsed: this.hintsUsed,
+      backgroundMusic: this.titlebar.getAudioButtonState(),
+      tiles: this.tiles.map(tile => tile.instance.isDone)
+    };
+
+    return currentState;
+  }
+
+  /**
    * Handle puzzle image loaded.
    */
   handleImageLoaded() {
@@ -778,16 +808,18 @@ export default class JigsawPuzzleContent {
       this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
     }
 
-    // Autoplay backgroundMusic (if not prevented by browser policy)
+    // Autoplay backgroundMusic (if not prevented by browser policy) or was turned off
     if (this.params.sound.autoplayBackgroundMusic) {
       this.titlebar.enableAudioButton();
-      this.titlebar.toggleAudioButton('unmute');
-      this.startAudio('backgroundMusic');
+
+      if (this.params.previousState.backgroundMusic !== false) {
+        this.titlebar.toggleAudioButton('unmute');
+        this.startAudio('backgroundMusic');
+      }
     }
 
     // Start timer
-    if (this.params.timeLimit) {
-      this.timeLeft = this.params.timeLimit;
+    if (this.timeLeft > 0) {
       this.runTimer();
     }
 
@@ -922,8 +954,13 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileCreated(tile) {
-    // Position tile randomly depending on space available
-    this.randomizeTile(tile);
+    if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
+      this.finishTiles([tile], {animate: false});
+    }
+    else {
+      // Position tile randomly depending on space available
+      this.randomizeTile(tile);
+    }
 
     this.puzzleArea.appendChild(tile.getDOM());
 

@@ -90,9 +90,9 @@ export default class JigsawPuzzle extends H5P.Question {
           height: this.params.tilesVertical
         },
         sortingSpace: this.params.behaviour.sortingSpace,
-        previousState: this.extras.previousState,
+        previousState: this.previousState,
         stroke: Math.max(window.innerWidth / 750, 1.75),
-        tileBorderColor: 'rgba(80,80,80,0.5)',
+        tileBorderColor: 'rgba(88, 88, 88, 0.5)',
         showBackground: this.params.behaviour.showBackground,
         sound: this.params.sound || {},
         timeLimit: this.params.behaviour.timeLimit || null,
@@ -131,11 +131,6 @@ export default class JigsawPuzzle extends H5P.Question {
    * Add all the buttons that shall be passed to H5P.Question.
    */
   addButtons() {
-    // Toggle background music button
-    // this.addButton('toggle-background-music', this.params.l10n.mute, (foo) => {
-    //   this.handleClickMuteButton(foo);
-    // }, true, {this.params.a11y.mute}, {});
-
     // Toggle background music button
     this.addButton('complete', this.params.l10n.complete, () => {
       this.handleClickButtonComplete();
@@ -306,7 +301,6 @@ export default class JigsawPuzzle extends H5P.Question {
    * Get tasks description.
    * @return {string} Description.
    */
-  // TODO: Have a field for a task description in the editor if you need one.
   getDescription() {
     return this.params.taskDescription || JigsawPuzzle.DEFAULT_DESCRIPTION;
   }
@@ -316,16 +310,12 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {object} Current state.
    */
   getCurrentState() {
-    /*
-     * TODO: Return any data object that will indicate the state that should
-     * be loaded on start, here it's a random number
-     */
-    return {
-      random: Math.random(100)
-    };
+    return this.content.getCurrentState();
   }
 
-  // Own handler
+  /**
+   * Own resize handler.
+   */
   handleResize() {
     if (this.bubblingUpwards || !this.content) {
       return; // Prevent send event back down.
@@ -334,7 +324,9 @@ export default class JigsawPuzzle extends H5P.Question {
     this.content.handleResize();
   }
 
-  // Callback for children (content)
+  /**
+   * Resize callback for children (content).
+   */
   handleOnResize() {
     // Prevent target from sending event back down
     this.bubblingUpwards = true;
@@ -345,22 +337,19 @@ export default class JigsawPuzzle extends H5P.Question {
     this.bubblingUpwards = false;
   }
 
+  /**
+   * Handle puzzle completed.
+   */
   handleCompleted() {
     this.hideButton('complete');
     this.hideButton('hint');
   }
 
   /**
-   * Handle click on button mute/unmute.
-   */
-  handleClickButtonMute() {
-  }
-
-  /**
    * Handle click on button complete.
    */
   handleClickButtonComplete() {
-    this.content.moveTilesToTarget();
+    this.content.finishTiles();
     this.content.handlePuzzleCompleted();
   }
 

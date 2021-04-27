@@ -130,6 +130,14 @@ export default class JiggsawPuzzleTitlebar {
   }
 
   /**
+   * Get audio button state.
+   * @return {boolean} True if audio button is active.
+   */
+  getAudioButtonState() {
+    return this.buttonAudio.isActive();
+  }
+
+  /**
    * Set fullscreen button state.
    * @param {string|boolean} state enter|false for enter, exit|true for exit.
    */
