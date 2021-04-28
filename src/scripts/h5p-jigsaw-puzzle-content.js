@@ -1,5 +1,7 @@
+// Import required classes
 import JigsawPuzzleTile from './components/h5p-jigsaw-puzzle-tile';
 import JiggsawPuzzleTitlebar from './components/h5p-jigsaw-puzzle-titlebar';
+import Util from './h5p-jigsaw-puzzle-util';
 
 // Import default audio
 import AudioPuzzleDefaultSong1 from '../audio/puzzle-default-song-1.mp3';
@@ -28,15 +30,20 @@ export default class JigsawPuzzleContent {
    * @param {number} params.stroke Stroke width.
    * @param {object} callbacks Callbacks.
    * @param {function} callbacks.onResize Callback for triggering content resize.
+   * @param {function} callbacks.onCompleted Callback for informing about puzzle completed.
+   * @param {function} callbacks.onButtonFullscreenClicked Callback for fullscreen button clicked.
+   * @param {function} callbacks.onHintDone Callback for when hint is done.
    */
   constructor(params = {}, callbacks = {}) {
     this.params = params;
 
-    this.callbacks = callbacks;
-    this.callbacks.onResize = this.callbacks.onResize || (() => {});
-    this.callbacks.onCompleted = this.callbacks.onCompleted || (() => {});
-    this.callbacks.onButtonFullscreenClicked = this.callbacks.onButtonFullscreenClicked || (() => {});
-    this.callbacks.onHintDone = this.callbacks.onHintDone || (() => {});
+    // Set missing callbacks
+    this.callbacks = Util.extend({
+      onResize: () => {},
+      onCompleted: () => {},
+      onButtonFullscreenClicked: () => {},
+      onHintDone: () => {}
+    }, callbacks);
 
     // Audios
     this.audios = [];
@@ -62,7 +69,7 @@ export default class JigsawPuzzleContent {
     // Answer given
     this.isAnswerGiven = false;
 
-    // H5P.Question elements that need to be retrieved
+    // H5P.Question DOM elements that need to be retrieved
     this.h5pQuestionContent = null;
     this.h5pQuestionButtons = null;
 
@@ -70,6 +77,7 @@ export default class JigsawPuzzleContent {
     this.content = document.createElement('div');
     this.content.classList.add('h5p-jigsaw-puzzle-content');
 
+    // If no image is set, only show message
     if (!this.params.puzzleImageInstance.source) {
       const message = document.createElement('div');
       message.classList.add('h5p-jigsaw-puzzle-message');
@@ -78,6 +86,48 @@ export default class JigsawPuzzleContent {
       return;
     }
 
+    // Titlebar
+    this.addTitlebar();
+
+    // Puzzle Area
+    this.addPuzzleArea();
+
+    // Overlay to block clicks when showing hints
+    this.overlay = document.createElement('button');
+    this.overlay.classList.add('h5p-jigsaw-puzzle-overlay');
+    this.overlay.classList.add('disabled');
+    this.content.appendChild(this.overlay);
+
+    // Image to be used for tiles and background
+    this.image = document.createElement('img');
+    this.image.addEventListener('load', () => {
+      this.handleImageLoaded(this.params.imageFormat);
+    });
+    this.imageCrossOrigin = typeof H5P.getCrossOrigin === 'function' ?
+      H5P.getCrossOrigin(params.puzzleImageInstance.source) :
+      'Anonymous';
+    this.image.src = params.puzzleImageInstance.source;
+    this.canvas = document.createElement('canvas');
+
+    // Attention seeker manager for elements
+    this.attentionSeeker = new H5P.AttentionSeeker();
+
+    // Add audios
+    this.addAudios();
+  }
+
+  /**
+   * Return the DOM for this class.
+   * @return {HTMLElement} DOM for this class.
+   */
+  getDOM() {
+    return this.content;
+  }
+
+  /**
+   * Add titlebar.
+   */
+  addTitlebar() {
     // Titlebar
     this.titlebar = new JiggsawPuzzleTitlebar(
       {
@@ -102,12 +152,18 @@ export default class JigsawPuzzleContent {
     // Set hints used in titlebar
     this.titlebar.setHintsUsed(this.hintsUsed);
 
+    // Set placeholder for time left in titlebar
     if (this.params.timeLimit) {
       this.titlebar.setTimeLeft('...');
     }
 
     this.content.appendChild(this.titlebar.getDOM());
+  }
 
+  /**
+   * Add puzzleArea.
+   */
+  addPuzzleArea() {
     // Puzzle area
     this.puzzleArea = document.createElement('div');
     this.puzzleArea.classList.add('h5p-jigsaw-puzzle-puzzle-area');
@@ -127,36 +183,6 @@ export default class JigsawPuzzleContent {
     sortingArea.classList.add('h5p-jigsaw-puzzle-sorting-area');
     sortingArea.style.width = `${(100 * this.params.sortingSpace) / (100 - this.params.sortingSpace)}%`;
     this.puzzleArea.appendChild(sortingArea);
-
-    this.overlay = document.createElement('button');
-    this.overlay.classList.add('h5p-jigsaw-puzzle-overlay');
-    this.overlay.classList.add('disabled');
-    this.content.appendChild(this.overlay);
-
-    // Image to be used for tiles and background
-    this.image = document.createElement('img');
-    this.image.addEventListener('load', () => {
-      this.handleImageLoaded(this.params.imageFormat);
-    });
-    this.imageCrossOrigin = typeof H5P.getCrossOrigin === 'function' ?
-      H5P.getCrossOrigin(params.puzzleImageInstance.source) :
-      'Anonymous';
-    this.image.src = params.puzzleImageInstance.source;
-    this.canvas = document.createElement('canvas');
-
-    // Add audios
-    this.addAudios();
-
-    // Attention seeker manager for elements
-    this.attentionSeeker = new H5P.AttentionSeeker();
-  }
-
-  /**
-   * Return the DOM for this class.
-   * @return {HTMLElement} DOM for this class.
-   */
-  getDOM() {
-    return this.content;
   }
 
   /**
@@ -275,16 +301,16 @@ export default class JigsawPuzzleContent {
         onPuzzleTileCreated: ((tile) => {
           this.handlePuzzleTileCreated(tile);
         }),
-        onPuzzleTileMoveStart: ((tile) => {
-          this.handlePuzzleTileMoveStart(tile);
+        onPuzzleTileMoveStarted: ((tile) => {
+          this.handlePuzzleTileMoveStarted(tile);
         }),
-        onPuzzleTileMove: ((tile) => {
-          this.handlePuzzleTileMove(tile);
+        onPuzzleTileMoved: ((tile) => {
+          this.handlePuzzleTileMoved(tile);
         }),
-        onPuzzleTileMoveEnd: ((tile) => {
-          this.handlePuzzleTileMoveEnd(tile);
+        onPuzzleTileMoveEnded: ((tile) => {
+          this.handlePuzzleTileMoveEnded(tile);
         }),
-        onCloseHint: (() => {
+        onHintClosed: (() => {
           this.overlay.click();
         })
       }
@@ -394,7 +420,7 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Add audio.
+   * Add single audio.
    * @param {string} id Id.
    * @param {string} path File path.
    * @param {object} params Extra parameters.
@@ -538,6 +564,7 @@ export default class JigsawPuzzleContent {
    */
   setFixedHeight(enterFullScreen = false) {
     if (enterFullScreen) {
+      // Compute maximum available height
       const styleContent = window.getComputedStyle(this.h5pQuestionContent);
       const marginContent = parseFloat(styleContent.getPropertyValue('margin-bottom'));
 
@@ -550,11 +577,11 @@ export default class JigsawPuzzleContent {
       this.maxHeight = null;
     }
 
-    this.handleResize();
+    this.handleResized();
   }
 
   /**
-   * Run timer.
+   * Run timer for time left.
    */
   runTimer() {
     this.titlebar.setTimeLeft(this.timeLeft);
@@ -697,7 +724,7 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Move puzzle tiles to targets.
+   * Move all puzzle tiles to targets and finalize them.
    * @param {JigsawPuzzleTile[]} [tiles] Tiles to move to target.
    * @param {object} [params={}] Parameters.
    * @param {boolean} [params.animate=false] If true, animate.
@@ -818,6 +845,7 @@ export default class JigsawPuzzleContent {
     params.delay = params.delay ?? 0.75;
     params.toTarget = params.toTarget ?? true;
 
+    // Move there and back
     if (params.toTarget) {
       this.setTilePosition({
         tile: params.tile,
@@ -841,7 +869,7 @@ export default class JigsawPuzzleContent {
     this.animateHintTimeout = setTimeout(() => {
       params.toTarget = !params.toTarget;
       this.animateHint(params);
-    }, 1000 * (params.duration + params.delay));
+    }, (params.duration + params.delay) * 1000);
   }
 
   /**
@@ -971,7 +999,7 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Handle puzzle image loaded.
+   * Handle puzzle image loaded and create puzzle tiles from it.
    */
   handleImageLoaded(format) {
     this.originalSize = {
@@ -1013,10 +1041,12 @@ export default class JigsawPuzzleContent {
       this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
     }
 
+    if (this.audios.backgroundMusic) {
+      this.titlebar.enableAudioButton();
+    }
+
     // Autoplay backgroundMusic (if not prevented by browser policy) or was turned off
     if (this.params.sound.autoplayBackgroundMusic) {
-      this.titlebar.enableAudioButton();
-
       if (this.params.previousState.backgroundMusic !== false) {
         this.titlebar.toggleAudioButton('unmute');
         this.startAudio('backgroundMusic');
@@ -1030,13 +1060,13 @@ export default class JigsawPuzzleContent {
     }
 
     // Resize now that the content is created
-    this.handleResize();
+    this.handleResized();
   }
 
   /**
-   * Handle resize.
+   * Handle resize. Set size dpending on fullscreen and scale
    */
-  handleResize() {
+  handleResized() {
     if (this.originalSize) {
 
       const regularScale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
@@ -1074,7 +1104,7 @@ export default class JigsawPuzzleContent {
    * Handle puzzle tile being about to be moved.
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
-  handlePuzzleTileMoveStart(tile) {
+  handlePuzzleTileMoveStarted(tile) {
     clearTimeout(this.attentionWorker);
     this.attentionSeeker.unregisterAll();
 
@@ -1097,7 +1127,7 @@ export default class JigsawPuzzleContent {
    * Handle puzzle tile being moved.
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
-  handlePuzzleTileMove() {
+  handlePuzzleTileMoved() {
     // Could be useful for showing hints
   }
 
@@ -1105,7 +1135,7 @@ export default class JigsawPuzzleContent {
    * Handle puzzle tile being dropped.
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
-  handlePuzzleTileMoveEnd(tile) {
+  handlePuzzleTileMoveEnded(tile) {
     // Unghost all tiles to show everything
     this.tiles.forEach(tile => {
       tile.instance.unghost();
@@ -1124,8 +1154,8 @@ export default class JigsawPuzzleContent {
       y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
     };
 
-    // Close enough, snap and disable
-    const slack = Math.min(currentSize.baseWidth, currentSize.baseHeight) / JigsawPuzzleContent.slackFactor;
+    // If tile if dropped close enough to target, snap it there
+    const slack = Math.min(currentSize.baseWidth, currentSize.baseHeight) * JigsawPuzzleContent.slackFactor;
     if (
       (Math.abs(currentPosition.x - targetPosition.x) < slack) &&
       (Math.abs(currentPosition.y - targetPosition.y) < slack)
@@ -1136,6 +1166,7 @@ export default class JigsawPuzzleContent {
         y: targetPosition.y
       });
 
+      // Final position set
       this.finalizeTile(tile);
 
       this.startAudio('AudioPuzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
@@ -1145,6 +1176,7 @@ export default class JigsawPuzzleContent {
       this.startAudio('AudioPuzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
 
+    // For question type contract
     this.isAnswerGiven = true;
 
     // Handle completed
@@ -1181,6 +1213,7 @@ export default class JigsawPuzzleContent {
    */
   handlePuzzleCompleted(params) {
     if (this.isOverlayShowing) {
+      // Close blocking hint overlay
       this.titlebar.enableAudioButton();
       this.titlebar.enableFullscreenButton();
 
@@ -1189,8 +1222,10 @@ export default class JigsawPuzzleContent {
       this.callbacks.onHintDone();
     }
 
+    // Stop background jobs
     clearTimeout(this.timer);
     this.stopAttentionGrabber();
+
     this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     this.callbacks.onCompleted(params);
@@ -1201,27 +1236,35 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileCreated(tile) {
+    // Position tile randomly depending on space available
     if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
       this.finishTiles([tile], {animate: false});
     }
     else {
-      // Position tile randomly depending on space available
       this.randomizeTile(tile);
     }
 
     this.puzzleArea.appendChild(tile.getDOM());
 
-    // When all tiles are loaded, start
+    // All tiles created?
     if (tile.getId() + 1 === this.params.size.width * this.params.size.height) {
-      this.startAudio('AudioPuzzleStart');
-
-      window.requestAnimationFrame(() => {
-        this.isPuzzleSetUp = true;
-        setTimeout(() => {
-          this.handleResize();
-        }, 100); // For large images
-      });
+      this.handleAllTilesCreated();
     }
+  }
+
+  /**
+   * Handle all puzzle tiles created.
+   */
+  handleAllTilesCreated() {
+    this.startAudio('AudioPuzzleStart');
+
+    window.requestAnimationFrame(() => {
+      this.isPuzzleSetUp = true;
+
+      setTimeout(() => {
+        this.handleResized();
+      }, 100); // For large images
+    });
   }
 
   /**
@@ -1232,8 +1275,9 @@ export default class JigsawPuzzleContent {
     this.finishTiles();
   }
 }
-/** @constant {number} Slack factor for snapping tiles to grid */
-JigsawPuzzleContent.slackFactor = 10;
+
+/** @constant {number} Slack factor for snapping as percentage of tile size */
+JigsawPuzzleContent.slackFactor = 0.25;
 
 /** @constant {object} Default audio file paths*/
 JigsawPuzzleContent.AUDIOS = {

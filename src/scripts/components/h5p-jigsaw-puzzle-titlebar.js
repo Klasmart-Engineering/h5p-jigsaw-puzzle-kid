@@ -9,7 +9,6 @@ import './h5p-jigsaw-puzzle-titlebar.scss';
 export default class JiggsawPuzzleTitlebar {
   /**
    * @constructor
-   *
    * @param {object} params Parameter from editor.
    * @param {string} params.title Title.
    * @param {string} params.dateString Date.
@@ -43,6 +42,7 @@ export default class JiggsawPuzzleTitlebar {
     this.titleBar = document.createElement('div');
     this.titleBar.classList.add('h5p-jigsaw-puzzle-title-bar');
 
+    // Status info
     this.statusInfo = new JiggsawPuzzleStatusInfo();
     this.titleBar.appendChild(this.statusInfo.getDOM());
 

@@ -16,22 +16,28 @@ export default class JigsawPuzzleTile {
   constructor(params = {}, callbacks = {}) {
     this.params = params;
 
-    this.callbacks = callbacks;
-    this.callbacks.onPuzzleTileCreated = this.callbacks.onPuzzleTileCreated || (() => {});
-    this.callbacks.onPuzzleTileMoveStart = this.callbacks.onPuzzleTileMoveStart || (() => {});
-    this.callbacks.onPuzzleTileMove = this.callbacks.onPuzzleTileMove || (() => {});
-    this.callbacks.onPuzzleTileMoveEnd = this.callbacks.onPuzzleTileMoveEnd || (() => {});
-    this.callbacks.onCloseHint = this.callbacks.onCloseHint || (() => {});
+    // Set missing callbacks
+    this.callbacks = Util.extend({
+      onPuzzleTileCreated: () => {},
+      onPuzzleTileMoveStarted: () => {},
+      onPuzzleTileMoved: () => {},
+      onPuzzleTileMoveEnded: () => {},
+      onHintClosed: () => {}
+    }, callbacks);
 
+    // SVG path borders to be used separately
     this.pathBorders = {};
 
+    // Keep track of movement
     this.moveInitialX = null;
     this.moveInitialY = null;
     this.deltaX = null;
     this.deltaY = null;
 
+    // Keep track if tile is at target position
     this.isDone = false;
 
+    // Add background image
     this.backgroundImage = new Image();
     this.backgroundImage.addEventListener('load', () => {
       this.handleImageLoaded();
@@ -40,14 +46,16 @@ export default class JigsawPuzzleTile {
     this.backgroundImage.crossOrigin = params.imageCrossOrigin;
     this.backgroundImage.src = params.imageSource;
 
-    this.handleTileMoveStart = this.handleTileMoveStart.bind(this);
-    this.handleTileMove = this.handleTileMove.bind(this);
-    this.handleTileMoveEnd = this.handleTileMoveEnd.bind(this);
+    // add handlers
+    this.handleTileMoveStarted = this.handleTileMoveStarted.bind(this);
+    this.handleTileMoved = this.handleTileMoved.bind(this);
+    this.handleTileMoveEnded = this.handleTileMoveEnded.bind(this);
     this.handleAnimationMoveEnded = this.handleAnimationMoveEnded.bind(this);
 
     this.tile = document.createElement('div');
     this.tile.classList.add('h5p-jigsaw-puzzle-tile');
 
+    // Initial scale
     this.setScale(1);
   }
 
@@ -74,11 +82,11 @@ export default class JigsawPuzzleTile {
    */
   buildSVG(params = {}) {
     const svg = document.createElement('svg');
-
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
     svg.setAttribute('viewBox', `0 0 ${params.width + params.stroke} ${params.height + params.stroke}`);
 
+    // Create background pattern
     const defs = document.createElement('defs');
     const pattern = document.createElement('pattern');
     pattern.setAttribute('id', `h5p-jigsaw-puzzle-${this.params.uuid}-pattern-${this.params.id}`);
@@ -94,6 +102,7 @@ export default class JigsawPuzzleTile {
     defs.appendChild(pattern);
     svg.appendChild(defs);
 
+    // Set Main
     const path = document.createElement('path');
     path.setAttribute('fill', `url(#h5p-jigsaw-puzzle-${this.params.uuid}-pattern-${this.params.id})`);
     path.setAttribute('stroke-opacity', '0');
@@ -106,6 +115,7 @@ export default class JigsawPuzzleTile {
     }));
     svg.appendChild(path);
 
+    // Add paths for borders
     ['top', 'right', 'bottom', 'left'].forEach(side => {
       this.pathBorders[side] = this.buildPathDOM({
         stroke: params.stroke,
@@ -310,6 +320,7 @@ export default class JigsawPuzzleTile {
       return;
     }
 
+    // Keep tile inside puzzle area
     const puzzleArea = this.params.container;
     const minX = puzzleArea.offsetLeft;
     const maxX = puzzleArea.offsetLeft + puzzleArea.offsetWidth - this.width;
@@ -395,11 +406,11 @@ export default class JigsawPuzzleTile {
    * @param {number} [params.duration=0.5] CSS transition duration in seconds.
    */
   animateMove(params = {}) {
-    params.duration = params.duration || 0.5;
+    params.duration = params.duration || JigsawPuzzleTile.HINT_DURATION;
 
     this.tile.removeEventListener('transitionend', this.handleAnimationMoveEnded);
     this.tile.addEventListener('transitionend', this.handleAnimationMoveEnded);
-    if (params.duration !== 0.5) {
+    if (params.duration !== JigsawPuzzleTile.HINT_DURATION) {
       this.tile.style.transitionDuration = `${params.duration}s`;
     }
 
@@ -437,18 +448,18 @@ export default class JigsawPuzzleTile {
 
     this.callbacks.onPuzzleTileCreated(this);
 
-    this.tile.addEventListener('touchstart', this.handleTileMoveStart);
-    this.tile.addEventListener('mousedown', this.handleTileMoveStart, false);
+    this.tile.addEventListener('touchstart', this.handleTileMoveStarted);
+    this.tile.addEventListener('mousedown', this.handleTileMoveStarted, false);
   }
 
   /**
-   * Handle tile starts moving.
+   * Handle tile started moving.
    * @param {Event} event MouseEvent|TouchEvent.
    */
-  handleTileMoveStart(event) {
+  handleTileMoveStarted(event) {
     if (this.isDisabled) {
       if (this.isShowingHint) {
-        this.callbacks.onCloseHint();
+        this.callbacks.onHintClosed();
       }
       return;
     }
@@ -456,6 +467,7 @@ export default class JigsawPuzzleTile {
     event = event || window.event;
     event.preventDefault();
 
+    // Stop animation of hint that may be set
     this.handleAnimationMoveEnded();
 
     // Keep track of starting click position in absolute pixels
@@ -468,24 +480,26 @@ export default class JigsawPuzzleTile {
       this.moveInitialY = event.clientY;
     }
 
-    document.addEventListener('mousemove', this.handleTileMove);
-    document.addEventListener('touchmove', this.handleTileMove);
-    document.addEventListener('mouseup', this.handleTileMoveEnd);
-    document.addEventListener('touchend', this.handleTileMoveEnd);
+    // Listeners for moving and dropping
+    document.addEventListener('mousemove', this.handleTileMoved);
+    document.addEventListener('touchmove', this.handleTileMoved);
+    document.addEventListener('mouseup', this.handleTileMoveEnded);
+    document.addEventListener('touchend', this.handleTileMoveEnded);
 
-    this.callbacks.onPuzzleTileMoveStart(this);
+    this.callbacks.onPuzzleTileMoveStarted(this);
   }
 
   /**
-   * Handle tile moves.
+   * Handle tile moved.
    * @param {Event} event MouseEvent|TouchEvent.
    */
-  handleTileMove(event) {
+  handleTileMoved(event) {
     event = event || window.event;
 
     let deltaX = 0;
     let deltaY = 0;
 
+    // Update position
     if (event.type === 'touchmove') {
       deltaX = this.moveInitialX - event.touches[0].clientX;
       deltaY = this.moveInitialY - event.touches[0].clientY;
@@ -504,20 +518,21 @@ export default class JigsawPuzzleTile {
       y: this.getPosition().y - deltaY
     });
 
-    this.callbacks.onPuzzleTileMove(this);
+    this.callbacks.onPuzzleTileMoved(this);
   }
 
   /**
-   * Handle tile stops moving.
+   * Handle tile stopped moving.
    * @param {Event} event MouseEvent|TouchEvent.
    */
-  handleTileMoveEnd() {
-    document.removeEventListener('mousemove', this.handleTileMove);
-    document.removeEventListener('touchmove', this.handleTileMove);
-    document.removeEventListener('mouseup', this.handleTileMoveEnd);
-    document.removeEventListener('touchend', this.handleTileMoveEnd);
+  handleTileMoveEnded() {
+    // Remove listeners
+    document.removeEventListener('mousemove', this.handleTileMoved);
+    document.removeEventListener('touchmove', this.handleTileMoved);
+    document.removeEventListener('mouseup', this.handleTileMoveEnded);
+    document.removeEventListener('touchend', this.handleTileMoveEnded);
 
-    this.callbacks.onPuzzleTileMoveEnd(this);
+    this.callbacks.onPuzzleTileMoveEnded(this);
   }
 
   /**
@@ -554,3 +569,6 @@ JigsawPuzzleTile.PATHS_BORDER = {
   'vertical-left': 'l 0, @gaph a 1 1 0 0 0 0 @knob l 0, @gaph',
   'vertical-right': 'l 0, @gaph a 1 1 0 0 1 0 @knob l 0, @gaph'
 };
+
+/** constant {number} Hint move duration */
+JigsawPuzzleTile.HINT_DURATION = 0.5;

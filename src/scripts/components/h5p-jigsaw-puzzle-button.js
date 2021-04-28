@@ -44,8 +44,9 @@ export default class JigsawPuzzleButton {
     this.disabled = this.params.disabled;
 
     // Sanitize callbacks
-    this.callbacks = callbacks || {};
-    this.callbacks.onClick = this.callbacks.onClick || (() => {});
+    this.callbacks = Util.extend({
+      onClick: () => {}
+    }, callbacks);
 
     // Button
     this.button = document.createElement('button');

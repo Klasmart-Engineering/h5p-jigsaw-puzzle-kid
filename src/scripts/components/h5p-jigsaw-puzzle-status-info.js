@@ -25,6 +25,24 @@ export default class JiggsawPuzzleStatusInfo {
     this.statusInfo.classList.add('h5p-jigsaw-puzzle-status-info');
 
     // Time left
+    this.addTimeLeftBlock();
+
+    // Hints
+    this.addHintsUsedBlock();
+  }
+
+  /**
+   * Return the DOM for this class.
+   * @return {HTMLElement} DOM for this class.
+   */
+  getDOM() {
+    return this.statusInfo;
+  }
+
+  /**
+   * Add the block for time left info.
+   */
+  addTimeLeftBlock() {
     this.statusTime = document.createElement('div');
     this.statusTime.classList.add('h5p-jigsaw-puzzle-status');
     this.statusTime.classList.add('hidden');
@@ -38,8 +56,12 @@ export default class JiggsawPuzzleStatusInfo {
     this.statusTime.appendChild(this.statusTextTime);
 
     this.statusInfo.appendChild(this.statusTime);
+  }
 
-    // Hints
+  /**
+   * Add the block for hints used info.
+   */
+  addHintsUsedBlock() {
     this.statusHint = document.createElement('div');
     this.statusHint.classList.add('h5p-jigsaw-puzzle-status');
     this.statusHint.classList.add('hidden');
@@ -53,14 +75,6 @@ export default class JiggsawPuzzleStatusInfo {
     this.statusHint.appendChild(this.statusTextHint);
 
     this.statusInfo.appendChild(this.statusHint);
-  }
-
-  /**
-   * Return the DOM for this class.
-   * @return {HTMLElement} DOM for this class.
-   */
-  getDOM() {
-    return this.statusInfo;
   }
 
   /**
@@ -84,7 +98,7 @@ export default class JiggsawPuzzleStatusInfo {
   /**
    * Format time.
    * @param {number} time Time in seconds.
-   * @return {string} Time formatted.
+   * @return {string} Time formatted as hhh:mm:ss.
    */
   formatTime(time) {
     const segments = [];

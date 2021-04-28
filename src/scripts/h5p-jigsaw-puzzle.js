@@ -4,18 +4,10 @@ import Util from './h5p-jigsaw-puzzle-util';
 
 /**
  * Class holding a full JigsawPuzzle.
- *
- * - Extends H5P.Question which offers functions for setting the DOM
- * - Implements the question type contract necessary for reporting and for
- *   making the content type usable in compound content types like Question Set
- *   Cpm. https://h5p.org/documentation/developers/contracts
- * - Implements getCurrentState to allow continuing a user's previous session
- * - Uses a separate content class to organitze files
  */
 export default class JigsawPuzzle extends H5P.Question {
   /**
    * @constructor
-   *
    * @param {object} params Parameters passed by the editor.
    * @param {number} contentId Content's id.
    * @param {object} [extras] Saved state, metadata, etc.
@@ -67,38 +59,43 @@ export default class JigsawPuzzle extends H5P.Question {
     // this.previousState now holds the saved content state of the previous session
     this.previousState = this.extras.previousState || {};
 
+    /*
+     * SVG background handling requires ids, so we need to make sure we can
+     * distinguish between multiple puzzle instances in compound content types
+     */
     this.uuid = H5P.createUUID();
 
     this.puzzleImageInstance = H5P.newRunnable(this.params.puzzleImage, this.contentId);
 
     // Handle resize from H5P core
     this.on('resize', () => {
-      this.handleResize();
+      this.handleH5PResized();
     });
   }
 
   /**
-   * Register the DOM elements with H5P.Question
+   * Register the DOM elements with H5P.Question.
    */
   registerDomElements() {
+    // Create content
     this.content = new JigsawPuzzleContent(
       {
+        attentionSeeker: this.params.behaviour.attentionSeeker,
         contentId: this.contentId,
-        puzzleImageInstance: this.puzzleImageInstance,
         imageFormat: this.params?.puzzleImage?.params?.file?.mime,
-        uuid: this.uuid,
+        previousState: this.previousState,
+        puzzleImageInstance: this.puzzleImageInstance,
+        showBackground: this.params.behaviour.showBackground,
         size: {
           width: this.params.tilesHorizontal,
           height: this.params.tilesVertical
         },
         sortingSpace: this.params.behaviour.sortingSpace,
-        previousState: this.previousState,
+        sound: this.params.sound || {},
         stroke: Math.max(window.innerWidth / 750, 1.75),
         tileBorderColor: 'rgba(88, 88, 88, 0.5)',
-        showBackground: this.params.behaviour.showBackground,
-        sound: this.params.sound || {},
         timeLimit: this.params.behaviour.timeLimit || null,
-        attentionSeeker: this.params.behaviour.attentionSeeker,
+        uuid: this.uuid,
         a11y: {
           buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
           buttonFullscreenExit: this.params.a11y.buttonFullscreenExit,
@@ -113,15 +110,19 @@ export default class JigsawPuzzle extends H5P.Question {
       },
       {
         onResize: (() => {
+          // Handle resize request from content
           this.handleOnResize();
         }),
         onCompleted: ((params) => {
-          this.handleCompleted(params);
+          // Handle completion of puzzle from content
+          this.handlePuzzleCompleted(params);
         }),
         onButtonFullscreenClicked: (() => {
+          // Handle request to toggle fullscreen mode
           this.toggleFullscreen();
         }),
         onHintDone: (() => {
+          // Handle content done showing a hint
           this.handleHintDone();
         })
       }
@@ -131,23 +132,23 @@ export default class JigsawPuzzle extends H5P.Question {
     this.setContent(this.content.getDOM());
 
     if (!this.params?.puzzleImage?.params?.file?.path) {
-      return;
+      return; // No image given, rest not needed
     }
 
     // Register Buttons
     this.addButtons();
 
-    // Wait for content DOM to be completed
+    // Wait for content DOM to be completed to handle DOM initialization
     if (document.readyState === 'complete') {
       window.requestAnimationFrame(() => {
-        this.handleInitialized();
+        this.handleDOMInitialized();
       });
     }
     else {
       document.addEventListener('readystatechange', () => {
         if (document.readyState === 'complete') {
           window.requestAnimationFrame(() => {
-            this.handleInitialized();
+            this.handleDOMInitialized();
           });
         }
       });
@@ -167,14 +168,14 @@ export default class JigsawPuzzle extends H5P.Question {
    * Add all the buttons that shall be passed to H5P.Question.
    */
   addButtons() {
-    // Toggle background music button
+    // Complete button
     this.addButton('complete', this.params.l10n.complete, () => {
       this.handleClickButtonComplete({xAPI: true});
     }, this.params.behaviour.enableComplete, {
       'aria-label': this.params.a11y.complete
     }, {});
 
-    // Toggle background music button
+    // Show hint button
     this.addButton('hint', this.params.l10n.hint, () => {
       this.handleClickButtonHint();
     }, this.params.behaviour.enableHint, {
@@ -199,8 +200,8 @@ export default class JigsawPuzzle extends H5P.Question {
   }
 
   /**
-   * Disable a button.
-   * @param {string} id Id of button to disable.
+   * Disable a single button.
+   * @param {string} id Id of button to be disabled.
    */
   disableButton(id) {
     if (!this.buttons[id]) {
@@ -221,8 +222,8 @@ export default class JigsawPuzzle extends H5P.Question {
   }
 
   /**
-   * Enable a button.
-   * @param {string} id Id of button to enable.
+   * Enable a single button.
+   * @param {string} id Id of button to be enabled.
    */
   enableButton(id) {
     if (!this.buttons[id]) {
@@ -235,7 +236,7 @@ export default class JigsawPuzzle extends H5P.Question {
 
   /**
    * Toggle fullscreen button.
-   * @param {string|boolean} state enter|false for enter, exit|true for exit.
+   * @param {string|boolean} [state] enter|false for enter, exit|true for exit.
    */
   toggleFullscreen(state) {
     if (!this.container) {
@@ -260,9 +261,11 @@ export default class JigsawPuzzle extends H5P.Question {
     }
     else {
       H5P.exitFullScreen();
+
       setTimeout(() => {
         this.trigger('resize');
       }, 100); // Small images
+
       setTimeout(() => {
         this.trigger('resize');
       }, 500); // Large images take more time
@@ -447,9 +450,9 @@ export default class JigsawPuzzle extends H5P.Question {
   }
 
   /**
-   * Handle content initialized
+   * Handle DOM initialized.
    */
-  handleInitialized() {
+  handleDOMInitialized() {
     // Add fullscreen button on first call after H5P.Question has created the DOM
     this.container = Util.closestParent(this.content.getDOM(), '.h5p-container.h5p-jigsaw-puzzle');
 
@@ -478,12 +481,12 @@ export default class JigsawPuzzle extends H5P.Question {
   /**
    * Own resize handler.
    */
-  handleResize() {
+  handleH5PResized() {
     if (this.bubblingUpwards || !this.content) {
       return; // Prevent send event back down.
     }
 
-    this.content.handleResize();
+    this.content.handleResized();
   }
 
   /**
@@ -500,11 +503,27 @@ export default class JigsawPuzzle extends H5P.Question {
   }
 
   /**
+   * Handle hint start.
+   */
+  handleHintStarted() {
+    this.disableButtons();
+    this.content.stopAttentionGrabber();
+    this.content.showHint();
+  }
+
+  /**
+   * Handle hint done.
+   */
+  handleHintDone() {
+    this.enableButtons();
+  }
+
+  /**
    * Handle puzzle completed.
    * @param {object} [params] Parameters.
    * @param {boolean} xAPI It true. will trigger xAPI.
    */
-  handleCompleted(params = {}) {
+  handlePuzzleCompleted(params = {}) {
     this.hideButton('complete');
     this.hideButton('hint');
 
@@ -528,23 +547,7 @@ export default class JigsawPuzzle extends H5P.Question {
   handleClickButtonHint() {
     this.trigger(this.getXAPIPressedEvent('show hint'));
     this.content.incrementHintCounter();
-    this.handleHintStart();
-  }
-
-  /**
-   * Handle hint start.
-   */
-  handleHintStart() {
-    this.disableButtons();
-    this.content.stopAttentionGrabber();
-    this.content.showHint();
-  }
-
-  /**
-   * Handle hint done.
-   */
-  handleHintDone() {
-    this.enableButtons();
+    this.handleHintStarted();
   }
 
   /**
