@@ -571,9 +571,14 @@ export default class JigsawPuzzleContent {
 
       this.attentionWorker = setTimeout(() => {
         const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
+        if (unDoneTiles.length === 0) {
+          return;
+        }
+
         unDoneTiles.forEach(tile => {
           tile.instance.putInBackground();
         });
+
         this.attentionTile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
         const workerId = this.attentionSeeker.register({
           element: this.attentionTile.getDOM(),
