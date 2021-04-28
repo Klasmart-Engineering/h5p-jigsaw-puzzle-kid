@@ -456,6 +456,8 @@ export default class JigsawPuzzleTile {
     event = event || window.event;
     event.preventDefault();
 
+    this.handleAnimationMoveEnded();
+
     // Keep track of starting click position in absolute pixels
     if (event.type === 'touchstart') {
       this.moveInitialX = event.touches[0].clientX;
