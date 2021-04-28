@@ -1020,7 +1020,7 @@ export default class JigsawPuzzleContent {
       const regularHeight = regularScale * this.originalSize.height - this.borderWidth;
 
       // maxHeight is set in fullscreen mode
-      if (this.maxHeight && regularHeight > this.maxHeight) {
+      if (this.maxHeight && (regularHeight > this.maxHeight || this.puzzleDropzone.style.width)) {
         this.scale = (this.maxHeight - this.borderWidth) / this.originalSize.height;
         this.puzzleDropzone.style.height = `${this.maxHeight - 2 * this.borderWidth}px`;
         this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - this.borderWidth}px`;
