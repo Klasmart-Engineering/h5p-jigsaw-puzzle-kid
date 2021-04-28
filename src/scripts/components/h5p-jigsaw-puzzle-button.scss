@@ -5,14 +5,14 @@
   background-color: transparent;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 1.2em 1.2em;
-  border: 2px solid #fff;
+  background-size: $size-icon-default $size-icon-default;
+  border: $border-width-normal solid #fff;
   border-radius: $border-radius-small;
   display: flex;
   flex-shrink: 0;
-  height: 3.6em;
+  height: $size-icon-default * 3;
   padding: 0;
-  width: 3.6em;
+  width: $size-icon-default * 3;
 
   &.h5p-jigsaw-puzzle-display-none {
     display: none;

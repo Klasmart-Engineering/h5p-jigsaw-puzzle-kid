@@ -24,11 +24,11 @@
     .h5p-jigsaw-puzzle-status-icon {
       background-position: center;
       background-repeat: no-repeat;
-      background-size: 1.2em 1.2em;
+      background-size: $size-icon-default $size-icon-default;
       flex-shrink: 0;
-      height: 1.2em;
-      width: 1.2em;
-      margin-right: 0.3em;
+      height: $size-icon-default;
+      width: $size-icon-default;
+      margin-right: $margin-small;
 
       &.h5p-jigsaw-puzzle-status-icon-time {
         background-image: url("./../../images/button-time-icon-blue.svg");
@@ -41,7 +41,7 @@
 
     .h5p-jigsaw-puzzle-status-strong {
       font-weight: bold;
-      margin-right: 0.3em;
+      margin-right: $margin-small;
     }
   }
 }
