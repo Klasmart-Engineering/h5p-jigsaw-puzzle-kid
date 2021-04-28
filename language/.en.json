@@ -1,20 +1,138 @@
 {
   "semantics": [
     {
-      "label": "Text",
-      "placeholder": "Hello world",
-      "default": "Hello %username",
-      "description": "Says hello to someone"
+      "label": "Puzzle image",
+      "description": "Image that the tiles should be cut from."
+    },
+    {
+      "label": "Tiles horizontally",
+      "description": "Set how many puzzle tiles the jigsaw puzzle should have horizontally."
+    },
+    {
+      "label": "Tiles vertically",
+      "description": "Set how many puzzle tiles the jigsaw puzzle should have vertically."
+    },
+    {
+      "label": "Sound settings",
+      "description": "These options will let you set sound related options.",
+      "fields": [
+        {
+          "label": "Background Music",
+          "description": "Optional background music.",
+          "options": [
+            {
+              "label": "Song 1"
+            },
+            {
+              "label": "Song 2"
+            },
+            {
+              "label": "Song 3"
+            },
+            {
+              "label": "Song 4"
+            },
+            {
+              "label": "Custom"
+            }
+          ]
+        },
+        {
+          "label": "Background Music (custom)",
+          "description": "Optional background music.",
+          "showWhen": {
+            "rules": [
+              {}
+            ]
+          }
+        },
+        {
+          "label": "Autoplay background music",
+          "description": "Try to autoplay background music. May not be possible depending on the browser's policy."
+        },
+        {
+          "label": "Pick up puzzle tile",
+          "description": "Optional sound to play when a puzzle tile is picked up."
+        },
+        {
+          "label": "Drop puzzle tile correctly",
+          "description": "Optional sound to play when a puzzle tile is dropped in the correct spot."
+        }
+      ]
     },
     {
       "label": "Behavioural settings",
       "description": "These options will let you control how the task behaves.",
       "fields": [
         {
-          "label": "Enable \"Retry\""
+          "label": "Time limit",
+          "description": "Set an optional time limit in seconds."
         },
         {
-          "label": "Enable \"Solution\""
+          "label": "Attention seeker",
+          "attentionseeker": {},
+          "fields": [
+            {
+              "label": "Style of the attention seeker",
+              "description": "Set the visual style of how to draw attention to a puzzle tile.",
+              "options": [
+                {
+                  "label": "Bounce"
+                },
+                {
+                  "label": "Flash"
+                },
+                {
+                  "label": "Focus"
+                },
+                {
+                  "label": "Heart beat"
+                },
+                {
+                  "label": "Highlight"
+                },
+                {
+                  "label": "Pulse"
+                },
+                {
+                  "label": "Rubber band"
+                },
+                {
+                  "label": "Shake X"
+                },
+                {
+                  "label": "Tada"
+                },
+                {
+                  "label": "Wobble"
+                }
+              ]
+            },
+            {
+              "label": "Time interval",
+              "description": "Set how many seconds should pass before the user gets a signal and then before the user gets a hint."
+            }
+          ]
+        },
+        {
+          "label": "Show faint background",
+          "description": "Show a faint version of the image in the background to indicate where a puzzle tile needs to go."
+        },
+        {
+          "label": "Sorting space",
+          "description": "Set how much space in percent should be attached next to the jigsaw puzzle for sorting the tiles."
+        },
+        {
+          "label": "Enable \"Complete\" button"
+        },
+        {
+          "label": "Enable \"Show Hint\" button"
+        },
+        {
+          "label": "Enable \"Retry\" button"
+        },
+        {
+          "label": "Enable \"Solution\" button"
         }
       ]
     },
@@ -22,16 +140,61 @@
       "label": "User interface",
       "fields": [
         {
-          "label": "Text for \"Check\" button",
-          "default": "Check"
+          "label": "Text for \"Complete\" button",
+          "default": "Complete"
+        },
+        {
+          "label": "Text for \"Show hint\" button",
+          "default": "Show hint"
         },
         {
           "label": "Text for \"Retry\" button",
           "default": "Retry"
         },
         {
-          "label": "Text for \"Show solution\" button",
-          "default": "Show solution"
+          "label": "Text for \"No image\" message",
+          "default": "There was no image given for this jigsaw puzzle."
+        }
+      ]
+    },
+    {
+      "label": "Readspeaker",
+      "fields": [
+        {
+          "label": "Assistive technology description for \"Complete\" button",
+          "default": "Complete the puzzle. All tiles will be put to their correct position."
+        },
+        {
+          "label": "Assistive technology description for \"Show hint\" button",
+          "default": "Receive a visual hint to where a puzzle tile needs to go."
+        },
+        {
+          "label": "Assistive technology description for \"Retry\" button",
+          "default": "Retry the puzzle. All puzzle tiles will be shuffled on the canvas."
+        },
+        {
+          "label": "Assistive technology description for \"Enter fullscreen button\"",
+          "default": "Enter fullscreen mode"
+        },
+        {
+          "label": "Assistive technology description for \"Exit fullscreen button\"",
+          "default": "Exit fullscreen mode"
+        },
+        {
+          "label": "Assistive technology description for \"Mute\" button",
+          "default": "Mute background music"
+        },
+        {
+          "label": "Assistive technology description for \"Unmute\" button",
+          "default": "Unmute background music"
+        },
+        {
+          "label": "Assistive technology description for \"Disabled\"",
+          "default": "Disabled"
+        },
+        {
+          "label": "Assistive technology description for \"Close\"",
+          "default": "Close"
         }
       ]
     }

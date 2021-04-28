@@ -10,16 +10,16 @@
   },
   {
     "name": "tilesHorizontal",
-    "label": "Number of puzzle tiles horizontally",
-    "description": "How many puzzle tiles should the jigsaw puzzle have horizontally.",
+    "label": "Tiles horizontally",
+    "description": "Set how many puzzle tiles the jigsaw puzzle should have horizontally.",
     "type": "number",
     "min": 2,
     "default": 4
   },
   {
     "name": "tilesVertical",
-    "label": "Number of puzzle tiles vertically",
-    "description": "How many puzzle tiles should the jigsaw puzzle have vertically.",
+    "label": "Tiles vertically",
+    "description": "Set how many puzzle tiles the jigsaw puzzle should have vertically.",
     "type": "number",
     "min": 2,
     "default": 3
@@ -136,7 +136,7 @@
             "type": "select",
             "label": "Style of the attention seeker",
             "importance": "low",
-            "description": "Set the visual style of the attention seeker.",
+            "description": "Set the visual style of how to draw attention to a puzzle tile.",
             "optional": true,
             "options": [
               {
@@ -185,7 +185,7 @@
             "name": "interval",
             "type": "number",
             "label": "Time interval",
-            "description": "Set how many seconds time interval between triggering the attention should be.",
+            "description": "Set how many seconds should pass before the user gets a signal and then before the user gets a hint.",
             "importance": "low",
             "optional": true,
             "default": 10,
@@ -196,7 +196,7 @@
       {
         "name": "showBackground",
         "label": "Show faint background",
-        "description": "Show faint background to indicate where a puzzle tile needs to go.",
+        "description": "Show a faint version of the image in the background to indicate where a puzzle tile needs to go.",
         "type": "boolean",
         "importance": "low",
         "default": true,
@@ -214,7 +214,7 @@
       },
       {
         "name": "enableComplete",
-        "label": "Enable \"Complete\"",
+        "label": "Enable \"Complete\" button",
         "type": "boolean",
         "importance": "low",
         "default": true,
@@ -222,7 +222,7 @@
       },
       {
         "name": "enableHint",
-        "label": "Enable \"Hint\"",
+        "label": "Enable \"Show Hint\" button",
         "type": "boolean",
         "importance": "low",
         "default": true,
@@ -230,7 +230,7 @@
       },
       {
         "name": "enableRetry",
-        "label": "Enable \"Retry\"",
+        "label": "Enable \"Retry\" button",
         "type": "boolean",
         "importance": "low",
         "default": true,
@@ -238,7 +238,7 @@
       },
       {
         "name": "enableSolutionsButton",
-        "label": "Enable \"Solution\"",
+        "label": "Enable \"Solution\" button",
         "type": "boolean",
         "importance": "low",
         "default": true,
