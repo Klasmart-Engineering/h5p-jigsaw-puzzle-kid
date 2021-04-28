@@ -62,6 +62,10 @@ export default class JigsawPuzzleContent {
     // Answer given
     this.isAnswerGiven = false;
 
+    // H5P.Question elements that need to be retrieved
+    this.h5pQuestionContent = null;
+    this.h5pQuestionButtons = null;
+
     // Main content
     this.content = document.createElement('div');
     this.content.classList.add('h5p-jigsaw-puzzle-content');
@@ -489,6 +493,16 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Set H5P.Question elements.
+   * H5P.Question doesn't give access to these and there could be multiple on page.
+   * @param {HTMLElement} container H5P container element.
+   */
+  setH5PQuestionElements(container) {
+    this.h5pQuestionContent = container.querySelector('.h5p-question-content');
+    this.h5pQuestionButtons = container.querySelector('.h5p-question-buttons');
+  }
+
+  /**
    * Enable fullscreen button in titlebar.
    */
   enableFullscreenButton() {
@@ -512,14 +526,13 @@ export default class JigsawPuzzleContent {
    */
   setFixedHeight(enterFullScreen = false) {
     if (enterFullScreen) {
-      // TODO: Get rid of query selectors
-      const styleContent = window.getComputedStyle(document.querySelector('.h5p-question-content'));
+      const styleContent = window.getComputedStyle(this.h5pQuestionContent);
       const marginContent = parseFloat(styleContent.getPropertyValue('margin-bottom'));
 
-      const styleButtons = window.getComputedStyle(document.querySelector('.h5p-question-buttons'));
+      const styleButtons = window.getComputedStyle(this.h5pQuestionButtons);
       const marginButtons = parseFloat(styleButtons.getPropertyValue('margin-bottom')) + parseFloat(styleButtons.getPropertyValue('margin-top'));
 
-      this.maxHeight = window.innerHeight - 2 * this.params.stroke - this.puzzleArea.offsetTop - marginContent - marginButtons - document.querySelector('.h5p-question-buttons').offsetHeight;
+      this.maxHeight = window.innerHeight - 2 * this.params.stroke - this.puzzleArea.offsetTop - marginContent - marginButtons - this.h5pQuestionButtons.offsetHeight;
     }
     else {
       this.maxHeight = null;

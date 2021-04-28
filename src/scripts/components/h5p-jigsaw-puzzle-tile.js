@@ -310,8 +310,7 @@ export default class JigsawPuzzleTile {
       return;
     }
 
-    // TODO: Don't get this from DOM here
-    const puzzleArea = document.querySelector('.h5p-jigsaw-puzzle-puzzle-area');
+    const puzzleArea = this.params.container;
     const minX = puzzleArea.offsetLeft;
     const maxX = puzzleArea.offsetLeft + puzzleArea.offsetWidth - this.width;
 
