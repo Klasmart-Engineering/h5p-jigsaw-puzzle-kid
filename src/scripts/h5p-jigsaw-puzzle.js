@@ -53,6 +53,14 @@ export default class JigsawPuzzle extends H5P.Question {
       }
     }, params);
 
+    // Sanitize for use as text
+    for (let word in this.params.l10n) {
+      this.params.l10n[word] = Util.stripHTML(Util.htmlDecode(this.params.l10n[word]));
+    }
+    for (let word in this.params.a11y) {
+      this.params.a11y[word] = Util.stripHTML(Util.htmlDecode(this.params.a11y[word]));
+    }
+
     this.contentId = contentId;
     this.extras = extras;
 

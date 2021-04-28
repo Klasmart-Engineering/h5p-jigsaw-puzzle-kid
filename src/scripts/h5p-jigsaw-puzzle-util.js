@@ -22,6 +22,27 @@ class Util {
   }
 
   /**
+   * Retrieve true string from HTML encoded string.
+   * @param {string} input Input string.
+   * @return {string} Output string.
+   */
+  static htmlDecode(input) {
+    var dparser = new DOMParser().parseFromString(input, 'text/html');
+    return dparser.documentElement.textContent;
+  }
+
+  /**
+   * Retrieve string without HTML tags.
+   * @param {string} input Input string.
+   * @return {string} Output string.
+   */
+  static stripHTML(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  }
+
+  /**
    * Get closest parent node by selector.
    * @param {HTMLElement} node Node.
    * @param {string} selector CSS classname, id or tagname.
