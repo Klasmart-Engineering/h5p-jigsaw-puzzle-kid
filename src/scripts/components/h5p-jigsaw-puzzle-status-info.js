@@ -17,7 +17,7 @@ export default class JiggsawPuzzleStatusInfo {
         timeLeft: 'Time left:',
         hintsUsed: 'Hints used:'
       },
-      timeLeft: true, // TODO: false
+      timeLeft: false,
       hintsUsed: 0
     }, params);
 

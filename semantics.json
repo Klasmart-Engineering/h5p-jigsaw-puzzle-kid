@@ -274,6 +274,13 @@
         "type": "text",
         "importance": "low",
         "default": "Retry"
+      },
+      {
+        "name": "messageNoImage",
+        "label": "Text for \"No image\" message",
+        "type": "text",
+        "importance": "low",
+        "default": "There was no image given for this jigsaw puzzle."
       }
     ]
   },

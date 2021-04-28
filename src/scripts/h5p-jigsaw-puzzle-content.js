@@ -70,6 +70,14 @@ export default class JigsawPuzzleContent {
     this.content = document.createElement('div');
     this.content.classList.add('h5p-jigsaw-puzzle-content');
 
+    if (!this.params.puzzleImageInstance.source) {
+      const message = document.createElement('div');
+      message.classList.add('h5p-jigsaw-puzzle-message');
+      message.innerText = this.params.l10n.messageNoImage;
+      this.content.appendChild(message);
+      return;
+    }
+
     // Titlebar
     this.titlebar = new JiggsawPuzzleTitlebar(
       {
@@ -506,6 +514,10 @@ export default class JigsawPuzzleContent {
    * Enable fullscreen button in titlebar.
    */
   enableFullscreenButton() {
+    if (!this.titlebar) {
+      return;
+    }
+
     this.titlebar.enableFullscreenButton();
     this.titlebar.showFullscreenButton();
   }
@@ -950,14 +962,12 @@ export default class JigsawPuzzleContent {
    * @return {object} Current state.
    */
   getCurrentState() {
-    const currentState = {
+    return {
       timeLeft: this.timeLeft,
       hintsUsed: this.hintsUsed,
       backgroundMusic: this.titlebar.getAudioButtonState(),
       tiles: this.tiles.map(tile => tile.instance.isDone)
     };
-
-    return currentState;
   }
 
   /**

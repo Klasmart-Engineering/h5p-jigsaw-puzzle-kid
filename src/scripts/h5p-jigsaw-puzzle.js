@@ -45,7 +45,8 @@ export default class JigsawPuzzle extends H5P.Question {
       l10n: {
         complete: 'Complete',
         hint: 'Hint',
-        tryAgain: 'Retry'
+        tryAgain: 'Retry',
+        messageNoImage: 'There was no image given for this jigsaw puzzle.'
       },
       a11y: {
         buttonFullscreenEnter: 'Enter fullscreen mode',
@@ -68,7 +69,6 @@ export default class JigsawPuzzle extends H5P.Question {
 
     this.uuid = H5P.createUUID();
 
-    // TODO: Sanitizing
     this.puzzleImageInstance = H5P.newRunnable(this.params.puzzleImage, this.contentId);
 
     // Handle resize from H5P core
@@ -85,7 +85,7 @@ export default class JigsawPuzzle extends H5P.Question {
       {
         contentId: this.contentId,
         puzzleImageInstance: this.puzzleImageInstance,
-        imageFormat: this.params.puzzleImage.params.file.mime,
+        imageFormat: this.params?.puzzleImage?.params?.file?.mime,
         uuid: this.uuid,
         size: {
           width: this.params.tilesHorizontal,
@@ -106,6 +106,9 @@ export default class JigsawPuzzle extends H5P.Question {
           buttonAudioUnmute: this.params.a11y.buttonAudioUnmute,
           disabled: this.params.a11y.disabled,
           close: this.params.a11y.close
+        },
+        l10n: {
+          messageNoImage: this.params.l10n.messageNoImage
         }
       },
       {
@@ -127,7 +130,9 @@ export default class JigsawPuzzle extends H5P.Question {
     // Register content with H5P.Question
     this.setContent(this.content.getDOM());
 
-    // TODO: get parent h5p-container and use as basis for query selection
+    if (!this.params?.puzzleImage?.params?.file?.path) {
+      return;
+    }
 
     // Register Buttons
     this.addButtons();
@@ -434,6 +439,10 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {object} Current state.
    */
   getCurrentState() {
+    if (!this.params?.puzzleImage?.params?.file?.path) {
+      return;
+    }
+
     return this.content.getCurrentState();
   }
 
