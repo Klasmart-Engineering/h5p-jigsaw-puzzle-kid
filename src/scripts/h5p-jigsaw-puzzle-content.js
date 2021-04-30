@@ -57,8 +57,8 @@ export default class JigsawPuzzleContent {
     // Original image size
     this.originalSize = null;
 
-    // Border size;
-    this.borderWidth = null;
+    // Border size, fallback fixed 2px for Firefox that's too slow to paint :-/
+    this.borderWidth = 2;
 
     // Counter for hints used.
     this.hintsUsed = this.params.previousState?.hintsUsed || 0;
@@ -172,11 +172,11 @@ export default class JigsawPuzzleContent {
     // Area where puzzle tiles need to be put
     this.puzzleDropzone = document.createElement('div');
     this.puzzleDropzone.classList.add('h5p-jigsaw-puzzle-tile-container');
+    this.puzzleArea.appendChild(this.puzzleDropzone);
     window.requestAnimationFrame(() => {
       const styles = window.getComputedStyle(this.puzzleDropzone);
-      this.borderWidth = parseFloat(styles.getPropertyValue('border-width'));
+      this.borderWidth = parseFloat(styles.getPropertyValue('border-width')) || this.borderWidth;
     });
-    this.puzzleArea.appendChild(this.puzzleDropzone);
 
     // Optional sorting area for better overview
     const sortingArea = document.createElement('div');
@@ -1068,7 +1068,6 @@ export default class JigsawPuzzleContent {
    */
   handleResized() {
     if (this.originalSize) {
-
       const regularScale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
       const regularHeight = regularScale * this.originalSize.height - this.borderWidth;
 

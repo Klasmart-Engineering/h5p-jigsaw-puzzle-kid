@@ -36,6 +36,7 @@ export default class JigsawPuzzleTile {
 
     // Keep track if tile is at target position
     this.isDone = false;
+    this.scale = 1;
 
     // Add background image
     this.backgroundImage = new Image();
@@ -56,7 +57,7 @@ export default class JigsawPuzzleTile {
     this.tile.classList.add('h5p-jigsaw-puzzle-tile');
 
     // Initial scale
-    this.setScale(1);
+    this.setScale(this.scale);
   }
 
   /**
