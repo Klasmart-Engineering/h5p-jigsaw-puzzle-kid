@@ -57,6 +57,12 @@ export default class JigsawPuzzleContent {
     // Original image size
     this.originalSize = null;
 
+    // Maximum size (in fullscreen mode)
+    this.maxSize = {
+      heigth: null,
+      width: null
+    };
+
     // Border size, fallback fixed 2px for Firefox that's too slow to paint :-/
     this.borderWidth = 2;
 
@@ -564,17 +570,24 @@ export default class JigsawPuzzleContent {
    */
   setFixedHeight(enterFullScreen = false) {
     if (enterFullScreen) {
-      // Compute maximum available height
+      // Compute maximum available height and width
       const styleContent = window.getComputedStyle(this.h5pQuestionContent);
-      const marginContent = parseFloat(styleContent.getPropertyValue('margin-bottom'));
+      const marginContentVertical = parseFloat(styleContent.getPropertyValue('margin-bottom'));
+      const marginContentHorizontal = parseFloat(styleContent.getPropertyValue('margin-left')) + parseFloat(styleContent.getPropertyValue('margin-right'));
 
       const styleButtons = window.getComputedStyle(this.h5pQuestionButtons);
       const marginButtons = parseFloat(styleButtons.getPropertyValue('margin-bottom')) + parseFloat(styleButtons.getPropertyValue('margin-top'));
 
-      this.maxHeight = window.innerHeight - 2 * this.params.stroke - this.puzzleArea.offsetTop - marginContent - marginButtons - this.h5pQuestionButtons.offsetHeight;
+      this.maxSize = {
+        height: window.innerHeight - 2 * this.params.stroke - this.puzzleArea.offsetTop - marginContentVertical - marginButtons - this.h5pQuestionButtons.offsetHeight,
+        width: (window.innerWidth - 2 * this.params.stroke - marginContentHorizontal) * (100 - this.params.sortingSpace) / 100
+      };
     }
     else {
-      this.maxHeight = null;
+      this.maxSize = {
+        heigth: null,
+        width: null
+      };
     }
 
     this.handleResized();
@@ -1069,18 +1082,33 @@ export default class JigsawPuzzleContent {
   handleResized() {
     if (this.originalSize) {
       const regularScale = (this.puzzleDropzone.offsetWidth - this.borderWidth) / this.originalSize.width;
-      const regularHeight = regularScale * this.originalSize.height - this.borderWidth;
+      const regularSize = {
+        height: regularScale * this.originalSize.height - this.borderWidth,
+        width: regularScale * this.originalSize.width - this.borderWidth
+      };
 
-      // maxHeight is set in fullscreen mode
-      if (this.maxHeight && (regularHeight > this.maxHeight || this.puzzleDropzone.style.width)) {
-        this.scale = (this.maxHeight - this.borderWidth) / this.originalSize.height;
-        this.puzzleDropzone.style.height = `${this.maxHeight - 2 * this.borderWidth}px`;
-        this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - this.borderWidth}px`;
+      /*
+       * maxHeight/maxWidth are set in fullscreen mode
+       * Checking for this.puzzleDropzone.style.width because it is set when the
+       * dropzone has already been scaled in fullscreen mode - may toggle back
+       * to regular mode otherwise due to size detection delay
+       */
+      if (this.maxSize.height && (this.puzzleDropzone.style.width || regularSize.height > this.maxSize.height || regularSize.width > this.maxSize.width)) {
+        if ((this.maxSize.height - this.borderWidth) / this.originalSize.height < (this.maxSize.width - this.borderWidth) / this.originalSize.width) {
+          this.scale = (this.maxSize.height - this.borderWidth) / this.originalSize.height;
+          this.puzzleDropzone.style.height = `${this.maxSize.height - 2 * this.borderWidth}px`;
+          this.puzzleDropzone.style.width = `${this.scale * this.originalSize.width - this.borderWidth}px`;
+        }
+        else {
+          this.scale = (this.maxSize.width - this.borderWidth) / this.originalSize.width;
+          this.puzzleDropzone.style.height = `${this.scale * this.originalSize.height - this.borderWidth}px`;
+          this.puzzleDropzone.style.width = `${this.maxSize.width - 2 * this.borderWidth}px`;
+        }
         this.puzzleDropzone.style.flexShrink = 0;
       }
       else {
         this.scale = regularScale;
-        this.puzzleDropzone.style.height = `${regularHeight}px`;
+        this.puzzleDropzone.style.height = `${regularSize.height}px`;
         this.puzzleDropzone.style.width = '';
         this.puzzleDropzone.style.flexShrink = '';
       }
