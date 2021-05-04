@@ -2,7 +2,7 @@
   "title": "Jigsaw Puzzle",
   "description": "H5P content type for jigsaw puzzle games",
   "majorVersion": 0,
-  "minorVersion": 2,
+  "minorVersion": 3,
   "patchVersion": 0,
   "runnable": 1,
   "author": "Joubel",
