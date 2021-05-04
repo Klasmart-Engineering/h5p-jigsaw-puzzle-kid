@@ -635,8 +635,6 @@ export default class JigsawPuzzleContent {
     this.stopHintTimer();
 
     this.hintTimer = setTimeout(() => {
-      this.stopHintTimer();
-      this.stopAttentionTimer();
       this.showHint(this.attentionTile);
     }, this.params.autoHintInterval * 1000);
   }
@@ -795,6 +793,9 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} [tile] Tile to use for hint, otherwise random tile.
    */
   showHint(tile) {
+    this.stopAttentionTimer();
+    this.stopHintTimer();
+
     this.titlebar.disableAudioButton();
     this.titlebar.disableFullscreenButton();
 

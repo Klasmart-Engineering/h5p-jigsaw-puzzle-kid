@@ -516,7 +516,6 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   handleHintStarted() {
     this.disableButtons();
-    this.content.stopAttentionGrabber();
     this.content.showHint();
   }
 
