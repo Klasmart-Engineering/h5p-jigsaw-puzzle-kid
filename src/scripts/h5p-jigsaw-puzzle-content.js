@@ -8,11 +8,11 @@ import AudioPuzzleDefaultSong1 from '../audio/puzzle-default-song-1.mp3';
 import AudioPuzzleDefaultSong2 from '../audio/puzzle-default-song-2.mp3';
 import AudioPuzzleDefaultSong3 from '../audio/puzzle-default-song-3.mp3';
 import AudioPuzzleDefaultSong4 from '../audio/puzzle-default-song-4.mp3';
-import AudioPuzzleStart from '../audio/shaky-puzzle.mp3';
+import AudioPuzzleStarted from '../audio/shaky-puzzle.mp3';
 import AudioPuzzleTilePickUp from '../audio/puzzle-tile-pickup.mp3';
 import AudioPuzzleTileCorrect from '../audio/puzzle-tile-correct.mp3';
 import AudioPuzzleTileIncorrect from '../audio/puzzle-tile-incorrect.mp3';
-import AudioPuzzleComplete from '../audio/puzzle-fully-complete.mp3';
+import AudioPuzzleCompleted from '../audio/puzzle-fully-complete.mp3';
 import AudioPuzzleHint from '../audio/puzzle-hint.mp3';
 
 /** Class representing the content */
@@ -409,20 +409,18 @@ export default class JigsawPuzzleContent {
       this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
     }
 
+    // Add custom overrides of default included audios
     [
-      'AudioPuzzleStart', 'AudioPuzzleTilePickUp', 'AudioPuzzleTileCorrect',
-      'AudioPuzzleTileIncorrect', 'AudioPuzzleComplete', 'AudioPuzzleHint'
+      'puzzleStarted', 'puzzleTilePickUp', 'puzzleTileCorrect',
+      'puzzleTileIncorrect', 'puzzleCompleted', 'puzzleHint'
     ].forEach(id => {
-      this.addAudio(id, this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]));
+      if (this.params.sound[id] && this.params.sound[id].length > 0 && this.params.sound[id][0].path) {
+        this.addAudio(id, H5P.getPath(this.params.sound[id][0].path, this.params.contentId));
+      }
+      else {
+        this.addAudio(id, this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]));
+      }
     });
-
-    if (this.params.sound.puzzleTilePickUp && this.params.sound.puzzleTilePickUp.length > 0 && this.params.sound.puzzleTilePickUp[0].path) {
-      this.addAudio('AudioPuzzleTilePickUp', H5P.getPath(this.params.sound.puzzleTilePickUp[0].path, this.params.contentId));
-    }
-
-    if (this.params.sound.puzzleTileCorrect && this.params.sound.puzzleTileCorrect.length > 0 && this.params.sound.puzzleTileCorrect[0].path) {
-      this.addAudio('AudioPuzzleTileCorrect', H5P.getPath(this.params.sound.puzzleTileCorrect[0].path, this.params.contentId));
-    }
   }
 
   /**
@@ -688,7 +686,7 @@ export default class JigsawPuzzleContent {
       this.runAttentionGrabber();
     }
 
-    this.startAudio('AudioPuzzleStart', {silence: true, keepAlives: this.audiosToKeepAlive});
+    this.startAudio('puzzleStarted', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -781,7 +779,7 @@ export default class JigsawPuzzleContent {
     this.titlebar.disableAudioButton();
     this.titlebar.disableFullscreenButton();
 
-    this.startAudio('AudioPuzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
+    this.startAudio('puzzleHint', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     // Put undone tiles in background
     const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
@@ -1147,7 +1145,7 @@ export default class JigsawPuzzleContent {
     tile.putOnTop();
     tile.unghost();
 
-    this.startAudio('AudioPuzzleTilePickUp', {silence: true, keepAlives: this.audiosToKeepAlive});
+    this.startAudio('puzzleTilePickUp', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
 
   /**
@@ -1196,11 +1194,11 @@ export default class JigsawPuzzleContent {
       // Final position set
       this.finalizeTile(tile);
 
-      this.startAudio('AudioPuzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
+      this.startAudio('puzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
     else {
       tile.setDone(false);
-      this.startAudio('AudioPuzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
+      this.startAudio('puzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
 
     // For question type contract
@@ -1253,7 +1251,7 @@ export default class JigsawPuzzleContent {
     clearTimeout(this.timer);
     this.stopAttentionGrabber();
 
-    this.startAudio('AudioPuzzleComplete', {silence: true, keepAlives: this.audiosToKeepAlive});
+    this.startAudio('puzzleCompleted', {silence: true, keepAlives: this.audiosToKeepAlive});
 
     this.callbacks.onCompleted(params);
   }
@@ -1283,7 +1281,7 @@ export default class JigsawPuzzleContent {
    * Handle all puzzle tiles created.
    */
   handleAllTilesCreated() {
-    this.startAudio('AudioPuzzleStart');
+    this.startAudio('puzzleStarted');
 
     window.requestAnimationFrame(() => {
       this.isPuzzleSetUp = true;
@@ -1308,14 +1306,14 @@ JigsawPuzzleContent.slackFactor = 0.25;
 
 /** @constant {object} Default audio file paths*/
 JigsawPuzzleContent.AUDIOS = {
-  'AudioPuzzleDefaultSong1': AudioPuzzleDefaultSong1,
-  'AudioPuzzleDefaultSong2': AudioPuzzleDefaultSong2,
-  'AudioPuzzleDefaultSong3': AudioPuzzleDefaultSong3,
-  'AudioPuzzleDefaultSong4': AudioPuzzleDefaultSong4,
-  'AudioPuzzleStart': AudioPuzzleStart,
-  'AudioPuzzleTilePickUp': AudioPuzzleTilePickUp,
-  'AudioPuzzleTileCorrect': AudioPuzzleTileCorrect,
-  'AudioPuzzleTileIncorrect': AudioPuzzleTileIncorrect,
-  'AudioPuzzleComplete': AudioPuzzleComplete,
-  'AudioPuzzleHint': AudioPuzzleHint
+  'puzzleDefaultSong1': AudioPuzzleDefaultSong1,
+  'puzzleDefaultSong2': AudioPuzzleDefaultSong2,
+  'puzzleDefaultSong3': AudioPuzzleDefaultSong3,
+  'puzzleDefaultSong4': AudioPuzzleDefaultSong4,
+  'puzzleStarted': AudioPuzzleStarted,
+  'puzzleTilePickUp': AudioPuzzleTilePickUp,
+  'puzzleTileCorrect': AudioPuzzleTileCorrect,
+  'puzzleTileIncorrect': AudioPuzzleTileIncorrect,
+  'puzzleCompleted': AudioPuzzleCompleted,
+  'puzzleHint': AudioPuzzleHint
 };

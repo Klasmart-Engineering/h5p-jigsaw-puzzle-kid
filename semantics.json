@@ -38,19 +38,19 @@
         "description": "Optional background music.",
         "options": [
           {
-            "value": "AudioPuzzleDefaultSong1",
+            "value": "puzzleDefaultSong1",
             "label": "Song 1"
           },
           {
-            "value": "AudioPuzzleDefaultSong2",
+            "value": "puzzleDefaultSong2",
             "label": "Song 2"
           },
           {
-            "value": "AudioPuzzleDefaultSong3",
+            "value": "puzzleDefaultSong3",
             "label": "Song 3"
           },
           {
-            "value": "AudioPuzzleDefaultSong4",
+            "value": "puzzleDefaultSong4",
             "label": "Song 4"
           },
           {
@@ -86,10 +86,34 @@
         "default": false
       },
       {
+        "name": "puzzleStarted",
+        "type": "audio",
+        "label": "Start puzzle",
+        "description": "Alternative sound to play when puzzle is started.",
+        "importance": "low",
+        "optional": true
+      },
+      {
+        "name": "puzzleHint",
+        "type": "audio",
+        "label": "Show hint",
+        "description": "Alternative sound to play when a hint is shown.",
+        "importance": "low",
+        "optional": true
+      },
+      {
         "name": "puzzleTilePickUp",
         "type": "audio",
         "label": "Pick up puzzle tile",
-        "description": "Optional sound to play when a puzzle tile is picked up.",
+        "description": "Alternative sound to play when a puzzle tile is picked up.",
+        "importance": "low",
+        "optional": true
+      },
+      {
+        "name": "puzzleTileIncorrect",
+        "type": "audio",
+        "label": "Drop puzzle tile",
+        "description": "Alternative sound to play when a puzzle tile is dropped (in a wrong spot).",
         "importance": "low",
         "optional": true
       },
@@ -97,7 +121,15 @@
         "name": "puzzleTileCorrect",
         "type": "audio",
         "label": "Drop puzzle tile correctly",
-        "description": "Optional sound to play when a puzzle tile is dropped in the correct spot.",
+        "description": "Alternative sound to play when a puzzle tile is dropped in the correct spot.",
+        "importance": "low",
+        "optional": true
+      },
+      {
+        "name": "puzzleCompleted",
+        "type": "audio",
+        "label": "Complete puzzle",
+        "description": "Alternative sound to play when a puzzle is completed.",
         "importance": "low",
         "optional": true
       }
