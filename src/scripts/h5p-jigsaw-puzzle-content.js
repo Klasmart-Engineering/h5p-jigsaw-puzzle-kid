@@ -156,7 +156,9 @@ export default class JigsawPuzzleContent {
     );
 
     // Set hints used in titlebar
-    this.titlebar.setHintsUsed(this.hintsUsed);
+    if (this.params.showHintCounter) {
+      this.titlebar.setHintsUsed(this.hintsUsed);
+    }
 
     // Set placeholder for time left in titlebar
     if (this.params.timeLimit) {
@@ -692,7 +694,9 @@ export default class JigsawPuzzleContent {
     });
 
     this.hintsUsed = 0;
-    this.titlebar.setHintsUsed(this.hintsUsed);
+    if (this.params.showHintCounter) {
+      this.titlebar.setHintsUsed(this.hintsUsed);
+    }
     this.isAnswerGiven = false;
 
     if (this.params.timeLimit) {

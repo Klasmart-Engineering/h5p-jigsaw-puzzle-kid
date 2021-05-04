@@ -95,6 +95,7 @@ export default class JigsawPuzzle extends H5P.Question {
         previousState: this.previousState,
         puzzleImageInstance: this.puzzleImageInstance,
         showBackground: this.params.behaviour.showBackground,
+        showHintCounter: this.params.behaviour.enableHint,
         size: {
           width: this.params.tilesHorizontal,
           height: this.params.tilesVertical
