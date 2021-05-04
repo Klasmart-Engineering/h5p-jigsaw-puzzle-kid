@@ -647,7 +647,11 @@ export default class JigsawPuzzleContent {
    * @param {boolean} [params.keepAlive] If true, will not cancel previous call.
    */
   runAttentionTimer(params = {}) {
-    if (!this.params.attentionSeeker?.interval || this.timeLeft && this.params.attentionSeeker?.interval > this.timeLeft) {
+    if (
+      !this.params.attentionSeeker?.style ||
+      !this.params.attentionSeeker?.interval ||
+      this.timeLeft && this.params.attentionSeeker?.interval > this.timeLeft
+    ) {
       return;
     }
 
