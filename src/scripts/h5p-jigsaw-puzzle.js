@@ -89,6 +89,7 @@ export default class JigsawPuzzle extends H5P.Question {
     this.content = new JigsawPuzzleContent(
       {
         attentionSeeker: this.params.behaviour.attentionSeeker,
+        autoHintInterval: this.params.behaviour.autoHintInterval,
         contentId: this.contentId,
         imageFormat: this.params?.puzzleImage?.params?.file?.mime,
         previousState: this.previousState,

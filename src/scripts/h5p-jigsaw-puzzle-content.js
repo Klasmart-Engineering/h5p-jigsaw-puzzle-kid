@@ -610,60 +610,77 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Stop hint timer.
+   */
+  stopHintTimer() {
+    clearTimeout(this.hintTimer);
+  }
+
+  /**
    * Stop attention grabber.
    */
-  stopAttentionGrabber() {
-    clearTimeout(this.attentionWorker);
+  stopAttentionTimer() {
+    clearTimeout(this.attentionTimer);
     this.attentionSeeker.unregisterAll();
   }
 
   /**
-   * Run attention grabber.
-   * Will first use an attention seeker after interval complete, then
-   * use a hint.
-   * @param {string} [state=null] Determines what to use.
+   * Run the hint timer once (may be cancelled).
    */
-  runAttentionGrabber(state = null) {
-    if (this.params.attentionSeeker?.interval > this.timeLeft) {
+  runHintTimer() {
+    if (!this.params?.autoHintInterval || this.timeLeft && this.params?.autoHintInterval > this.timeLeft) {
       return;
     }
 
-    // Stop previous attention grabber
-    if (!state) {
-      this.stopAttentionGrabber();
+    this.stopHintTimer();
 
-      this.attentionWorker = setTimeout(() => {
-        const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
-        if (unDoneTiles.length === 0) {
-          return;
-        }
+    this.hintTimer = setTimeout(() => {
+      this.stopHintTimer();
+      this.stopAttentionTimer();
+      this.showHint(this.attentionTile);
+    }, this.params.autoHintInterval * 1000);
+  }
 
-        unDoneTiles.forEach(tile => {
-          tile.instance.putInBackground();
-        });
-
-        this.attentionTile = unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
-        const workerId = this.attentionSeeker.register({
-          element: this.attentionTile.getDOM(),
-          style: this.params.attentionSeeker.style,
-          interval: 0,
-          repeat: 1
-        });
-        this.attentionTile.putOnTop();
-
-        this.attentionSeeker.run(workerId);
-
-        this.runAttentionGrabber('hint');
-
-      }, this.params.attentionSeeker.interval * 1000);
+  /**
+   * Run the attention timer until cancelled.
+   * @param {object} params Parameters.
+   * @param {boolean} [params.keepAlive] If true, will not cancel previous call.
+   */
+  runAttentionTimer(params = {}) {
+    if (!this.params.attentionSeeker?.interval || this.timeLeft && this.params.attentionSeeker?.interval > this.timeLeft) {
+      return;
     }
-    else if (state === 'hint') {
-      clearTimeout(this.attentionWorker);
 
-      this.attentionWorker = setTimeout(() => {
-        this.showHint(this.attentionTile);
-      }, this.params.attentionSeeker.interval * 1000);
+    if (!params.keepAlive) {
+      this.stopAttentionTimer();
+      this.attentionTile = null;
     }
+
+    this.attentionTimer = setTimeout(() => {
+      this.stopAttentionTimer();
+
+      const unDoneTiles = this.tiles.filter(tile => !tile.instance.isDone);
+      if (unDoneTiles.length === 0) {
+        return;
+      }
+
+      unDoneTiles.forEach(tile => {
+        tile.instance.putInBackground();
+      });
+
+      this.attentionTile = this.attentionTile || unDoneTiles[Math.floor(Math.random() * unDoneTiles.length)].instance;
+      const workerId = this.attentionSeeker.register({
+        element: this.attentionTile.getDOM(),
+        style: this.params.attentionSeeker.style,
+        interval: 0,
+        repeat: 1
+      });
+      this.attentionTile.putOnTop();
+
+      this.attentionSeeker.run(workerId);
+
+      this.runAttentionTimer({keepAlive: true});
+    }, this.params.attentionSeeker.interval * 1000);
   }
 
   /**
@@ -683,8 +700,10 @@ export default class JigsawPuzzleContent {
     if (this.params.timeLimit) {
       this.timeLeft = this.params.timeLimit;
       this.runTimer();
-      this.runAttentionGrabber();
     }
+
+    this.runAttentionTimer();
+    this.runHintTimer();
 
     this.startAudio('puzzleStarted', {silence: true, keepAlives: this.audiosToKeepAlive});
   }
@@ -820,7 +839,8 @@ export default class JigsawPuzzleContent {
       tile.hideHint();
       tile.enable();
 
-      this.runAttentionGrabber();
+      this.runAttentionTimer();
+      this.runHintTimer();
 
       // Inform caller that hinting is done
       this.callbacks.onHintDone();
@@ -1067,8 +1087,10 @@ export default class JigsawPuzzleContent {
     // Start timer
     if (this.timeLeft > 0) {
       this.runTimer();
-      this.runAttentionGrabber();
     }
+
+    this.runAttentionTimer();
+    this.runHintTimer();
 
     // Resize now that the content is created
     this.handleResized();
@@ -1130,8 +1152,8 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileMoveStarted(tile) {
-    clearTimeout(this.attentionWorker);
-    this.attentionSeeker.unregisterAll();
+    this.stopAttentionTimer();
+    this.stopHintTimer();
 
     // Ghost all enabled tiles to allow comfortable positioning
     this.tiles.forEach(tile => {
@@ -1209,7 +1231,8 @@ export default class JigsawPuzzleContent {
       this.handlePuzzleCompleted({xAPI: true});
     }
     else {
-      this.runAttentionGrabber();
+      this.runAttentionTimer();
+      this.runHintTimer();
     }
   }
 
@@ -1249,7 +1272,8 @@ export default class JigsawPuzzleContent {
 
     // Stop background jobs
     clearTimeout(this.timer);
-    this.stopAttentionGrabber();
+    this.stopAttentionTimer();
+    this.stopHintTimer();
 
     this.startAudio('puzzleCompleted', {silence: true, keepAlives: this.audiosToKeepAlive});
 

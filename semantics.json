@@ -217,13 +217,21 @@
             "name": "interval",
             "type": "number",
             "label": "Time interval",
-            "description": "Set how many seconds should pass before the user gets a signal and then before the user gets a hint.",
+            "description": "Set how many seconds should pass before the user gets a signal to get his/her attention. Leave empty to not give a signal.",
             "importance": "low",
             "optional": true,
             "default": 10,
             "min": 1
           }
         ]
+      },
+      {
+        "name": "autoHintInterval",
+        "type": "number",
+        "label": "Auto hint time interval",
+        "description": "Set how many seconds should pass before the user gets a hint automatically (not incrementing the hint counter). Leave empty to not show a hint automatically.",
+        "importance": "low",
+        "optional": true
       },
       {
         "name": "showBackground",
