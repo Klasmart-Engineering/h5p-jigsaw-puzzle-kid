@@ -83,7 +83,7 @@ export default class JiggsawPuzzleStatusInfo {
    */
   setTimeLeft(time) {
     this.statusTime.classList.remove('hidden');
-    this.statusTextTime.innerHTML = typeof time === 'number' ? this.formatTime(time) : time;
+    this.statusTextTime.innerHTML = typeof time === 'number' ? Util.formatTime(time) : time;
   }
 
   /**
@@ -93,37 +93,5 @@ export default class JiggsawPuzzleStatusInfo {
   setHintsUsed(hints) {
     this.statusHint.classList.remove('hidden');
     this.statusTextHint.innerHTML = hints;
-  }
-
-  /**
-   * Format time.
-   * @param {number} time Time in seconds.
-   * @return {string} Time formatted as hhh:mm:ss.
-   */
-  formatTime(time) {
-    const segments = [];
-
-    let hours = Math.floor(time / 3600);
-    let minutes = Math.floor((time - hours * 3600) / 60);
-    let seconds = time - hours * 3600 - minutes * 60;
-
-    if (hours > 0) {
-      if (hours < 10) {
-        hours = `0${hours}`;
-      }
-      segments.push(`${hours}`);
-    }
-
-    if (minutes < 10) {
-      minutes = `0${minutes}`;
-    }
-    segments.push(`${minutes}`);
-
-    if (seconds < 10) {
-      seconds = `0${seconds}`;
-    }
-    segments.push(`${seconds}`);
-
-    return segments.join(':');
   }
 }

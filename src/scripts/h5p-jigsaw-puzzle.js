@@ -38,7 +38,8 @@ export default class JigsawPuzzle extends H5P.Question {
         complete: 'Complete',
         hint: 'Hint',
         tryAgain: 'Retry',
-        messageNoImage: 'There was no image given for this jigsaw puzzle.'
+        messageNoImage: 'There was no image given for this jigsaw puzzle.',
+        timeLimit: 'time limit'
       },
       a11y: {
         buttonFullscreenEnter: 'Enter fullscreen mode',
@@ -428,15 +429,15 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {object} XAPI definition.
    */
   getxAPIDefinition() {
-    let title = this.getTitle();
-    if (this.content.getTimeLeft()) {
-      title = `${title} (${Util.toISO8601TimePeriod(this.content.getTimeLeft())})`;
+    let description = this.getDescription();
+    if (this.params.behaviour.timeLimit) {
+      description = `${description} (${this.params.l10n.timeLimit}: ${Util.formatTime(this.params.behaviour.timeLimit)})`;
     }
 
     // Build definition
     return {
-      name: {'en-US': title},
-      description: {'en-US': this.getDescription()},
+      name: {'en-US': this.getTitle()},
+      description: {'en-US': description},
       type: 'http://adlnet.gov/expapi/activities/cmi.interaction',
       interactionType: 'other',
       extensions: {

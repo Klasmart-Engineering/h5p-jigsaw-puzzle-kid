@@ -39,12 +39,7 @@
         },
         {
           "label": "Background Music (custom)",
-          "description": "Optional background music.",
-          "showWhen": {
-            "rules": [
-              {}
-            ]
-          }
+          "description": "Optional background music."
         },
         {
           "label": "Autoplay background music",
@@ -86,7 +81,6 @@
         },
         {
           "label": "Attention seeker",
-          "attentionseeker": {},
           "fields": [
             {
               "label": "Style of the attention seeker",
@@ -174,6 +168,10 @@
         {
           "label": "Text for \"No image\" message",
           "default": "There was no image given for this jigsaw puzzle."
+        },
+        {
+          "label": "Text for \"time limit\" in xAPI description",
+          "default": "time limit"
         }
       ]
     },

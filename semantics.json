@@ -321,6 +321,13 @@
         "type": "text",
         "importance": "low",
         "default": "There was no image given for this jigsaw puzzle."
+      },
+      {
+        "name": "timeLimit",
+        "label": "Text for \"time limit\" in xAPI description",
+        "type": "text",
+        "importance": "low",
+        "default": "time limit"
       }
     ]
   },
