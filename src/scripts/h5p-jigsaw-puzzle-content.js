@@ -698,30 +698,49 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Stop hint overlay showing.
+   */
+  stopOverlayShowing() {
+    if (this.isOverlayShowing) {
+      // Close blocking hint overlay
+      this.titlebar.enableAudioButton();
+      this.titlebar.enableFullscreenButton();
+
+      clearTimeout(this.animateHintTimeout);
+      this.hideOverlay();
+      this.callbacks.onHintDone();
+    }
+  }
+
+  /**
    * Reset.
    */
   reset() {
-    this.tiles.forEach(tile => {
-      tile.instance.enable();
-      tile.instance.setDone(false);
-      this.randomizeTile(tile.instance);
-    });
+    this.stopOverlayShowing();
 
-    this.hintsUsed = 0;
-    if (this.params.showHintCounter) {
-      this.titlebar.setHintsUsed(this.hintsUsed);
-    }
-    this.isAnswerGiven = false;
+    setTimeout(() => {
+      this.tiles.forEach(tile => {
+        tile.instance.enable();
+        tile.instance.setDone(false);
+        this.randomizeTile(tile.instance);
+      });
 
-    if (this.params.timeLimit) {
-      this.timeLeft = this.params.timeLimit;
-      this.runTimer();
-    }
+      this.hintsUsed = 0;
+      if (this.params.showHintCounter) {
+        this.titlebar.setHintsUsed(this.hintsUsed);
+      }
+      this.isAnswerGiven = false;
 
-    this.runAttentionTimer();
-    this.runHintTimer();
+      if (this.params.timeLimit) {
+        this.timeLeft = this.params.timeLimit;
+        this.runTimer();
+      }
 
-    this.startAudio('puzzleStarted', {silence: true, keepAlives: this.audiosToKeepAlive});
+      this.runAttentionTimer();
+      this.runHintTimer();
+
+      this.startAudio('puzzleStarted', {silence: true, keepAlives: this.audiosToKeepAlive});
+    }, 0);
   }
 
   /**
@@ -1285,15 +1304,7 @@ export default class JigsawPuzzleContent {
    * Handle puzzle completed.
    */
   handlePuzzleCompleted(params) {
-    if (this.isOverlayShowing) {
-      // Close blocking hint overlay
-      this.titlebar.enableAudioButton();
-      this.titlebar.enableFullscreenButton();
-
-      clearTimeout(this.animateHintTimeout);
-      this.hideOverlay();
-      this.callbacks.onHintDone();
-    }
+    this.stopOverlayShowing();
 
     // Stop background jobs
     clearTimeout(this.timer);

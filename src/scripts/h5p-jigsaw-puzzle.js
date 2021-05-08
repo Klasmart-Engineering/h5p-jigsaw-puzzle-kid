@@ -328,6 +328,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-4}
    */
   showSolutions() {
+    this.content.stopOverlayShowing();
     this.handleClickButtonComplete({xAPI: false});
     this.trigger('resize');
   }
