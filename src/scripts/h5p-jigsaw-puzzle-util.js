@@ -43,6 +43,44 @@ class Util {
   }
 
   /**
+   * Convert seconds to ISO 8601 time period.
+   * @param {number} time Time in seconds >= 0.
+   * @return {string || null} ISO 8601 time period or null.
+   */
+  static toISO8601TimePeriod(time) {
+    if (typeof time !== 'number' || time < 0) {
+      return null;
+    }
+
+    const segments = [];
+
+    let hours = Math.floor(time / 3600);
+    let minutes = Math.floor((time - hours * 3600) / 60);
+    let seconds = time - hours * 3600 - minutes * 60;
+
+    if (hours > 0) {
+      if (hours < 10) {
+        hours = `0${hours}`;
+      }
+      segments.push(`${hours}H`);
+    }
+
+    if (minutes > 0 || minutes === 0 && hours > 0) {
+      if (minutes < 10) {
+        minutes = `0${minutes}`;
+      }
+      segments.push(`${minutes}M`);
+    }
+
+    if (seconds < 10) {
+      seconds = `0${seconds}`;
+    }
+    segments.push(`${seconds}S`);
+
+    return `PT${segments.join('')}`;
+  }
+
+  /**
    * Get closest parent node by selector.
    * @param {HTMLElement} node Node.
    * @param {string} selector CSS classname, id or tagname.

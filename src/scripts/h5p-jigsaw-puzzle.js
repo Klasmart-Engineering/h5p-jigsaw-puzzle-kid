@@ -368,6 +368,16 @@ export default class JigsawPuzzle extends H5P.Question {
     xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this,
       true, this.isPassed());
 
+    // Add time-left extension to result
+    xAPIEvent.data.statement = Util.extend(
+      {result: {
+        extensions: {
+          'https://snordian.de/x-api/extensions/time-left': Util.toISO8601TimePeriod(this.content.getTimeLeft())
+        }
+      }},
+      xAPIEvent.data.statement
+    );
+
     return xAPIEvent;
   }
 
@@ -418,13 +428,21 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {object} XAPI definition.
    */
   getxAPIDefinition() {
-    const definition = {};
-    definition.name = {'en-US': this.getTitle()};
-    definition.description = {'en-US': this.getDescription()};
-    definition.type = 'http://adlnet.gov/expapi/activities/cmi.interaction';
-    definition.interactionType = 'other';
+    let title = this.getTitle();
+    if (this.content.getTimeLeft()) {
+      title = `${title} (${Util.toISO8601TimePeriod(this.content.getTimeLeft())})`;
+    }
 
-    return definition;
+    // Build definition
+    return {
+      name: {'en-US': title},
+      description: {'en-US': this.getDescription()},
+      type: 'http://adlnet.gov/expapi/activities/cmi.interaction',
+      interactionType: 'other',
+      extensions: {
+        'https://snordian.de/x-api/extensions/time-limit': Util.toISO8601TimePeriod(this.params.behaviour.timeLimit)
+      }
+    };
   }
 
   /**

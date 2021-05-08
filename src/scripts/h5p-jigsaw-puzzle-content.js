@@ -390,6 +390,14 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Get time in seconds left on the timer or null if no timer set.
+   * @return {number|null} Time left in seconds or null if no timer set.
+   */
+  getTimeLeft() {
+    return this.timeLeft ?? null;
+  }
+
+  /**
    * Add audios.
    */
   addAudios() {
