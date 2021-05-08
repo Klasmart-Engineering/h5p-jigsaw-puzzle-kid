@@ -129,7 +129,7 @@ class Util {
 
     if (selector.substr(0, 1) === '.') { // classnames
       const selectors = selector.split('.').filter(selector => selector !== '');
-      if (selectors.every(selector => node.parentNode.classList.contains(selector))) {
+      if (selectors.every(selector => node.parentNode?.classList?.contains(selector))) {
         return node.parentNode;
       }
     }
