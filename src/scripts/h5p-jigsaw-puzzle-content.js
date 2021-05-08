@@ -118,8 +118,10 @@ export default class JigsawPuzzleContent {
     // Attention seeker manager for elements
     this.attentionSeeker = new H5P.AttentionSeeker();
 
-    // Add audios
-    this.addAudios();
+    if (typeof H5PEditor === 'undefined') {
+      // Add audios
+      this.addAudios();
+    }
   }
 
   /**
@@ -1104,7 +1106,7 @@ export default class JigsawPuzzleContent {
     if (Object.keys(this.params.previousState).length === 0 || this.params.previousState?.tiles.some(done => !done)) {
       // Not completed
 
-      if (this.timeLeft > 0) {
+      if (this.timeLeft > 0 && typeof H5PEditor === 'undefined') {
         // Start timers
         this.runTimer();
         this.runAttentionTimer();
