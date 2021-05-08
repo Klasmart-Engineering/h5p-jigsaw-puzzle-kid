@@ -84,7 +84,7 @@ export default class JigsawPuzzleContent {
     this.content.classList.add('h5p-jigsaw-puzzle-content');
 
     // If no image is set, only show message
-    if (!this.params.puzzleImageInstance.source) {
+    if (!this.params?.puzzleImageInstance?.source) {
       const message = document.createElement('div');
       message.classList.add('h5p-jigsaw-puzzle-message');
       message.innerText = this.params.l10n.messageNoImage;

@@ -74,7 +74,9 @@ export default class JigsawPuzzle extends H5P.Question {
      */
     this.uuid = H5P.createUUID();
 
-    this.puzzleImageInstance = H5P.newRunnable(this.params.puzzleImage, this.contentId);
+    if (this.params.puzzleImage) {
+      this.puzzleImageInstance = H5P.newRunnable(this.params.puzzleImage, this.contentId);
+    }
 
     // Handle resize from H5P core
     this.on('resize', () => {
