@@ -179,25 +179,36 @@ export default class JigsawPuzzle extends H5P.Question {
    */
   addButtons() {
     // Complete button
-    this.addButton('complete', this.params.l10n.complete, () => {
-      this.handleClickButtonComplete({xAPI: true});
-    }, this.params.behaviour.enableComplete, {
-      'aria-label': this.params.a11y.complete
-    }, {});
+    this.addButton(
+      'complete',
+      this.params.l10n.complete, () => {
+        this.handleClickButtonComplete({xAPI: true});
+      },
+      this.params.behaviour.enableComplete && this.previousState?.tiles?.some(done => !done),
+      {'aria-label': this.params.a11y.complete},
+      {}
+    );
 
     // Show hint button
-    this.addButton('hint', this.params.l10n.hint, () => {
-      this.handleClickButtonHint();
-    }, this.params.behaviour.enableHint, {
-      'aria-label': this.params.a11y.hint
-    }, {});
+    this.addButton(
+      'hint',
+      this.params.l10n.hint, () => {
+        this.handleClickButtonHint();
+      },
+      this.params.behaviour.enableHint && this.previousState?.tiles?.some(done => !done),
+      {'aria-label': this.params.a11y.hint},
+      {});
 
     // Retry button
-    this.addButton('try-again', this.params.l10n.tryAgain, () => {
-      this.handleClickButtonRetry();
-    }, this.params.behaviour.enableRetry, {
-      'aria-label': this.params.a11y.tryAgain
-    }, {});
+    this.addButton(
+      'try-again',
+      this.params.l10n.tryAgain, () => {
+        this.handleClickButtonRetry();
+      },
+      this.params.behaviour.enableRetry,
+      {'aria-label': this.params.a11y.tryAgain},
+      {}
+    );
   }
 
   /**

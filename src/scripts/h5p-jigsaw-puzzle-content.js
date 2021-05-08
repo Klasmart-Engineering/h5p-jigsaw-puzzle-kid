@@ -161,8 +161,8 @@ export default class JigsawPuzzleContent {
     }
 
     // Set placeholder for time left in titlebar
-    if (this.params.timeLimit) {
-      this.titlebar.setTimeLeft('...');
+    if (this.timeLeft) {
+      this.titlebar.setTimeLeft(this.timeLeft);
     }
 
     this.content.appendChild(this.titlebar.getDOM());
@@ -1093,13 +1093,19 @@ export default class JigsawPuzzleContent {
       }
     }
 
-    // Start timer
-    if (this.timeLeft > 0) {
-      this.runTimer();
-    }
+    if (Object.keys(this.params.previousState).length === 0 || this.params.previousState?.tiles.some(done => !done)) {
+      // Not completed
 
-    this.runAttentionTimer();
-    this.runHintTimer();
+      if (this.timeLeft > 0) {
+        // Start timers
+        this.runTimer();
+        this.runAttentionTimer();
+        this.runHintTimer();
+      }
+    }
+    else {
+      this.titlebar.setTimeLeft(this.timeLeft);
+    }
 
     // Resize now that the content is created
     this.handleResized();
