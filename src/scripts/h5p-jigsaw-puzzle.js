@@ -372,7 +372,7 @@ export default class JigsawPuzzle extends H5P.Question {
     xAPIEvent.data.statement = Util.extend(
       {result: {
         extensions: {
-          'https://snordian.de/x-api/extensions/time-left': Util.toISO8601TimePeriod(this.content.getTimeLeft())
+          'https://snordian.de/x-api/extension/time-left': Util.toISO8601TimePeriod(this.content.getTimeLeft())
         }
       }},
       xAPIEvent.data.statement
@@ -440,7 +440,7 @@ export default class JigsawPuzzle extends H5P.Question {
       type: 'http://adlnet.gov/expapi/activities/cmi.interaction',
       interactionType: 'other',
       extensions: {
-        'https://snordian.de/x-api/extensions/time-limit': Util.toISO8601TimePeriod(this.params.behaviour.timeLimit)
+        'https://snordian.de/x-api/extension/time-limit': Util.toISO8601TimePeriod(this.params.behaviour.timeLimit)
       }
     };
   }
