@@ -385,7 +385,15 @@ export default class JigsawPuzzleContent {
      * WordPress. We therefore need to build the correct path to the assets
      * in the library directory ourselves.
      */
-    const uberName = H5PIntegration.contents[`cid-${this.params.contentId}`].library.split(' ').join('-');
+    const jsonContent = H5PIntegration.contents[`cid-${this.params.contentId}`].jsonContent;
+    const regexp = RegExp('"library":"(H5P.JigsawPuzzleKID [0-9]+.[0-9]+)"');
+    const found = jsonContent.match(regexp);
+
+    if (!found) {
+      return null;
+    }
+
+    const uberName = found[1].replace(' ', '-');
     const h5pBasePath = H5P.getLibraryPath(uberName);
     const assetPathEnd = truePath.substr(truePath.indexOf('/assets'));
 
@@ -415,8 +423,12 @@ export default class JigsawPuzzleContent {
       }
     }
     else if (this.params.sound.backgroundMusic) {
-      backgroundMusic = this.getAssetPath(JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic]);
+      const assetPath = this.getAssetPath(JigsawPuzzleContent.AUDIOS[this.params.sound.backgroundMusic]);
+      if (assetPath) {
+        backgroundMusic = assetPath;
+      }
     }
+
     if (backgroundMusic) {
       this.titlebar.showAudioButton();
       this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
@@ -431,7 +443,10 @@ export default class JigsawPuzzleContent {
         this.addAudio(id, H5P.getPath(this.params.sound[id][0].path, this.params.contentId));
       }
       else {
-        this.addAudio(id, this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]));
+        const assetPath = this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]);
+        if (assetPath) {
+          this.addAudio(id, assetPath);
+        }
       }
     });
   }
