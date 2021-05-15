@@ -1,13 +1,13 @@
 {
-  "title": "Jigsaw Puzzle",
+  "title": "Jigsaw Puzzle (KidsLoop)",
   "description": "H5P content type for jigsaw puzzle games",
   "majorVersion": 0,
   "minorVersion": 3,
   "patchVersion": 0,
   "runnable": 1,
-  "author": "Joubel",
+  "author": "KidsLoop, Oliver Tacke",
   "license": "MIT",
-  "machineName": "H5P.JigsawPuzzle",
+  "machineName": "H5P.JigsawPuzzleKID",
   "embedTypes": [
     "iframe"
   ],

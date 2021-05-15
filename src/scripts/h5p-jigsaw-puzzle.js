@@ -5,7 +5,7 @@ import Util from './h5p-jigsaw-puzzle-util';
 /**
  * Class holding a full JigsawPuzzle.
  */
-export default class JigsawPuzzle extends H5P.Question {
+export default class JigsawPuzzleKID extends H5P.Question {
   /**
    * @constructor
    * @param {object} params Parameters passed by the editor.
@@ -476,7 +476,7 @@ export default class JigsawPuzzle extends H5P.Question {
     if (this.extras.metadata) {
       raw = this.extras.metadata.title;
     }
-    raw = raw || JigsawPuzzle.DEFAULT_DESCRIPTION;
+    raw = raw || JigsawPuzzleKID.DEFAULT_DESCRIPTION;
 
     // H5P Core function: createTitle
     return H5P.createTitle(raw);
@@ -487,7 +487,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {string} Description.
    */
   getDescription() {
-    return this.params.taskDescription || JigsawPuzzle.DEFAULT_DESCRIPTION;
+    return this.params.taskDescription || JigsawPuzzleKID.DEFAULT_DESCRIPTION;
   }
 
   /**
@@ -619,4 +619,4 @@ export default class JigsawPuzzle extends H5P.Question {
 }
 
 /** @constant {string} */
-JigsawPuzzle.DEFAULT_DESCRIPTION = 'Jigsaw Puzzle';
+JigsawPuzzleKID.DEFAULT_DESCRIPTION = 'Jigsaw Puzzle';
