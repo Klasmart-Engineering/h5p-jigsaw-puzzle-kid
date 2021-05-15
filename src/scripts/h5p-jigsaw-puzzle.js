@@ -306,7 +306,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-1}
    */
   getAnswerGiven() {
-    return this.content.getAnswerGiven();
+    return (this.content) ? this.content.getAnswerGiven() : false;
   }
 
   /**
@@ -315,7 +315,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-2}
    */
   getScore() {
-    return this.content.getScore();
+    return (this.content) ? this.content.getScore() : 0;
   }
 
   /**
@@ -332,6 +332,10 @@ export default class JigsawPuzzle extends H5P.Question {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-4}
    */
   showSolutions() {
+    if (this.content) {
+      return; // not ready yet
+    }
+
     this.content.stopOverlayShowing();
     this.handleClickButtonComplete({xAPI: false});
     this.trigger('resize');
@@ -350,7 +354,9 @@ export default class JigsawPuzzle extends H5P.Question {
       this.showButton('hint');
     }
 
-    this.content.reset();
+    if (this.content) {
+      this.content.reset();
+    }
 
     this.trigger('resize');
   }
@@ -489,7 +495,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * @return {object} Current state.
    */
   getCurrentState() {
-    if (!this.params?.puzzleImage?.params?.file?.path) {
+    if (!this.params?.puzzleImage?.params?.file?.path || !this.content) {
       return;
     }
 
