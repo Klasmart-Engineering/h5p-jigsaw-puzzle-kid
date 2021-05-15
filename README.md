@@ -1,10 +1,5 @@
-# H5P Boilerplate
-This repository provides you with some boilerplate code in different branches
-that are intended to make creating new content types a little easier.
-
-The master branch holds a very simple example, other branches contain different
-frames for different purposes. The source files may contain some TODOs for
-you in order to fill some functions with life.
+# H5P Jigsaw Puzzle (KidsLoop)
+JigsawPuzzle content type for H5P
 
 Please note that you'll need some familiarity with git and npm.
 
