@@ -42,7 +42,8 @@ export default class JigsawPuzzleContent {
       onResize: () => {},
       onCompleted: () => {},
       onButtonFullscreenClicked: () => {},
-      onHintDone: () => {}
+      onHintDone: () => {},
+      onInteracted: () => {}
     }, callbacks);
 
     // Audios
@@ -1269,6 +1270,7 @@ export default class JigsawPuzzleContent {
 
     // For question type contract
     this.isAnswerGiven = true;
+    this.callbacks.onInteracted();
 
     // Handle completed
     if (this.tiles.every(tile => tile.instance.isDone)) {

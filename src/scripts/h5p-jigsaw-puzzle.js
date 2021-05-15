@@ -137,6 +137,10 @@ export default class JigsawPuzzle extends H5P.Question {
         onHintDone: (() => {
           // Handle content done showing a hint
           this.handleHintDone();
+        }),
+        onInteracted: (() => {
+          // Handle interacted
+          this.handleInteracted();
         })
       }
     );
@@ -561,6 +565,13 @@ export default class JigsawPuzzle extends H5P.Question {
   }
 
   /**
+   * Handle user interacted
+   */
+  handleInteracted() {
+    this.triggerXAPI('interacted');
+  }
+
+  /**
    * Handle puzzle completed.
    * @param {object} [params] Parameters.
    * @param {boolean} xAPI It true. will trigger xAPI.
@@ -578,6 +589,7 @@ export default class JigsawPuzzle extends H5P.Question {
    * Handle click on button complete.
    */
   handleClickButtonComplete(params) {
+    this.handleInteracted();
     this.trigger(this.getXAPIPressedEvent('complete'));
     this.content.handlePuzzleCompleted(params);
     this.content.finishTiles();
