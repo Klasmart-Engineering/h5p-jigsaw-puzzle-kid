@@ -385,15 +385,33 @@ export default class JigsawPuzzleContent {
      * WordPress. We therefore need to build the correct path to the assets
      * in the library directory ourselves.
      */
-    const jsonContent = H5PIntegration.contents[`cid-${this.params.contentId}`].jsonContent;
-    const regexp = RegExp('"library":"(H5P.JigsawPuzzleKID [0-9]+.[0-9]+)"');
-    const found = jsonContent.match(regexp);
 
-    if (!found) {
-      return null;
+    let uberName = null;
+
+    // Main content
+    const library = H5PIntegration?.contents[`cid-${this.params.contentId}`]?.library;
+    if (library?.indexOf('H5P.JigsawPuzzleKID ') !== -1) {
+      uberName = library.replace(' ', '-');
     }
 
-    const uberName = found[1].replace(' ', '-');
+    // Subcontent
+    if (!uberName) {
+      const jsonContent = H5PIntegration?.contents[`cid-${this.params.contentId}`]?.jsonContent;
+      if (!jsonContent) {
+        return null;
+      }
+      const regexp = RegExp('"library":"(H5P.JigsawPuzzleKID [0-9]+.[0-9]+)"');
+      const found = jsonContent.match(regexp);
+      if (found) {
+        uberName = found[1].replace(' ', '-');
+      }
+    }
+
+    if (!uberName) {
+      return null; // Some problem
+    }
+
+    // Get asset path
     const h5pBasePath = H5P.getLibraryPath(uberName);
     const assetPathEnd = truePath.substr(truePath.indexOf('/assets'));
 
