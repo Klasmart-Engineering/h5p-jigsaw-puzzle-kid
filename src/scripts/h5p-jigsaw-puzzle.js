@@ -219,7 +219,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.shuffle, () => {
         this.handleClickButtonShuffle();
       },
-      this.previousState?.tiles?.every(done => !done),
+      !!this.previousState?.tiles && this.previousState?.tiles?.every(done => !done),
       {'aria-label': this.params.a11y.shuffle},
       {}
     );
@@ -230,7 +230,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.tryAgain, () => {
         this.handleClickButtonRetry();
       },
-      this.params.behaviour.enableRetry && this.previousState?.tiles?.some(done => done),
+      this.params.behaviour.enableRetry && (!!this.previousState?.tiles && this.previousState?.tiles?.some(done => done)),
       {'aria-label': this.params.a11y.tryAgain},
       {}
     );
