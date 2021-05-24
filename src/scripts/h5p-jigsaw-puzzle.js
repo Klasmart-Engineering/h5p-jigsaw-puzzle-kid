@@ -41,7 +41,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
         hint: 'Hint',
         tryAgain: 'Retry',
         messageNoImage: 'There was no image given for this jigsaw puzzle.',
-        timeLimit: 'time limit'
+        timeLimit: 'time limit',
+        shuffle: 'Shuffle'
       },
       a11y: {
         buttonFullscreenEnter: 'Enter fullscreen mode',
@@ -52,7 +53,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
         hint: 'Receive a visual hint to where a puzzle tile needs to go.',
         tryAgain: 'Retry the puzzle. All puzzle tiles will be shuffled on the canvas.',
         disabled: 'Disabled',
-        close: 'Close'
+        close: 'Close',
+        shuffle: 'Shuffle puzzle tiles.'
       }
     }, params);
 
@@ -208,7 +210,19 @@ export default class JigsawPuzzleKID extends H5P.Question {
       },
       this.params.behaviour.enableHint && this.previousState?.tiles?.some(done => !done),
       {'aria-label': this.params.a11y.hint},
-      {});
+      {}
+    );
+
+    // Shuffle button
+    this.addButton(
+      'shuffle',
+      this.params.l10n.shuffle, () => {
+        this.handleClickButtonShuffle();
+      },
+      this.previousState?.tiles?.every(done => !done),
+      {'aria-label': this.params.a11y.shuffle},
+      {}
+    );
 
     // Retry button
     this.addButton(
@@ -216,7 +230,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.tryAgain, () => {
         this.handleClickButtonRetry();
       },
-      this.params.behaviour.enableRetry,
+      this.params.behaviour.enableRetry && this.previousState?.tiles?.some(done => done),
       {'aria-label': this.params.a11y.tryAgain},
       {}
     );
@@ -357,6 +371,10 @@ export default class JigsawPuzzleKID extends H5P.Question {
     if (this.params.behaviour.enableHint) {
       this.showButton('hint');
     }
+
+    this.showButton('shuffle');
+
+    this.hideButton('try-again');
 
     if (this.content) {
       this.content.reset();
@@ -578,6 +596,11 @@ export default class JigsawPuzzleKID extends H5P.Question {
    * Handle user interacted
    */
   handleInteracted() {
+    if (this.getScore() > 0) {
+      this.showButton('try-again');
+      this.hideButton('shuffle');
+    }
+
     this.triggerXAPI('interacted');
   }
 
@@ -589,6 +612,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
   handlePuzzleCompleted(params = {}) {
     this.hideButton('complete');
     this.hideButton('hint');
+    this.hideButton('shuffle');
+    this.showButton('try-again');
 
     if (params.xAPI) {
       this.trigger(this.getXAPIAnsweredEvent());
@@ -612,6 +637,16 @@ export default class JigsawPuzzleKID extends H5P.Question {
     this.trigger(this.getXAPIPressedEvent('show hint'));
     this.content.incrementHintCounter();
     this.handleHintStarted();
+  }
+
+  /**
+   * Handle click on button shuffle.
+   */
+  handleClickButtonShuffle() {
+    this.content.randomizeTiles({
+      useFullArea: this.params.behaviour.useFullArea,
+      layout: this.params.behaviour.randomizerPattern
+    });
   }
 
   /**

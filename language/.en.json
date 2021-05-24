@@ -178,6 +178,10 @@
           "default": "Show hint"
         },
         {
+          "label": "Text for \"Shuffle\" button",
+          "default": "Shuffle"
+        },
+        {
           "label": "Text for \"Retry\" button",
           "default": "Retry"
         },
@@ -229,6 +233,10 @@
         {
           "label": "Assistive technology description for \"Close\"",
           "default": "Close"
+        },
+        {
+          "label": "Assistive technology description for \"Shuffle\"",
+          "default": "Shuffle tiles"
         }
       ]
     }

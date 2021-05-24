@@ -336,6 +336,13 @@
         "default": "Show hint"
       },
       {
+        "name": "shuffle",
+        "label": "Text for \"Shuffle\" button",
+        "type": "text",
+        "importance": "low",
+        "default": "Shuffle"
+      },
+      {
         "name": "tryAgain",
         "label": "Text for \"Retry\" button",
         "type": "text",
@@ -427,6 +434,13 @@
         "label": "Assistive technology description for \"Close\"",
         "importance": "low",
         "default": "Close"
+      },
+      {
+        "name": "shuffle",
+        "type": "text",
+        "label": "Assistive technology description for \"Shuffle\"",
+        "importance": "low",
+        "default": "Shuffle tiles"
       }
     ]
   }
