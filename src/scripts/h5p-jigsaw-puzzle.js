@@ -219,7 +219,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.shuffle, () => {
         this.handleClickButtonShuffle();
       },
-      !!this.previousState?.tiles && this.previousState?.tiles?.every(done => !done),
+      this.previousState?.tiles === undefined || this.previousState?.tiles?.every(done => !done),
       {'aria-label': this.params.a11y.shuffle},
       {}
     );
