@@ -253,6 +253,33 @@
         "max": 75
       },
       {
+        "name": "useFullArea",
+        "label": "Use full area",
+        "description": "Set if initially the tiles should cover the complete area including the area where they need to be dropped.",
+        "type": "boolean",
+        "importance": "low",
+        "default": false,
+        "optional": true
+      },
+      {
+        "name": "randomizerPattern",
+        "type": "select",
+        "label": "Randomizer pattern",
+        "importance": "low",
+        "description": "Set how the tiles' position should be randomized.",
+        "options": [
+          {
+            "value": "random",
+            "label": "Random"
+          },
+          {
+            "value": "staggered",
+            "label": "Staggered"
+          }
+        ],
+        "default": "random"
+      },
+      {
         "name": "enableComplete",
         "label": "Enable \"Complete\" button",
         "type": "boolean",

@@ -756,7 +756,10 @@ export default class JigsawPuzzleContent {
       this.tiles.forEach(tile => {
         tile.instance.enable();
         tile.instance.setDone(false);
-        this.randomizeTile(tile.instance);
+        this.randomizeTiles({
+          useFullArea: this.params.useFullArea,
+          layout: this.params.randomizerPattern
+        });
       });
 
       this.hintsUsed = 0;
@@ -778,22 +781,72 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Randomize tile position.
-   * @param {JigsawPuzzleTile} tile Puzzle tile.
+   * Randomize all tiles.
+   * @param {object} params Parameters.
+   * @param {boolean} [params.useFullArea] If true, use full area to spread tiles.
+   * @param {string} [params.layout] Spread layout, random by default.
    */
-  randomizeTile(tile) {
-    // Position tile randomly depending on space available
-    const tileSize = tile.getSize();
-    const left = (this.puzzleArea.offsetWidth * this.params.sortingSpace / 100 < tileSize.width) ?
-      Math.max(0, Math.random() * (this.puzzleArea.offsetWidth - tile.getSize().width)) :
-      Math.max(0, this.puzzleArea.offsetLeft + this.puzzleArea.offsetWidth * (1 - this.params.sortingSpace / 100) + Math.random() * (this.puzzleArea.offsetWidth * (1 - this.params.sortingSpace / 100) - tileSize.width));
-    const top = Math.max(this.puzzleArea.offsetTop, Math.random() * (this.puzzleArea.offsetTop + this.puzzleArea.offsetHeight - tileSize.height));
+  randomizeTiles(params = {}) {
+    // All tile ids in random order
+    const tilesToRandomize = Util.shuffleArray([...Array(this.tiles.length).keys()]);
 
-    this.setTilePosition({
-      tile: tile,
-      x: left,
-      y: top,
-      animate: this.isPuzzleSetUp
+    // Determine maximum tile size
+    const maxTileSize = this.tiles.reduce((max, current) => {
+      return {
+        width: Math.max(max.width, current.instance.getSize().width),
+        height: Math.max(max.height, current.instance.getSize().height)
+      };
+    }, {width: 0, height: 0});
+
+    // Check what arey should be used to arrange tiles on
+    const useFullArea = params.useFullArea || (this.puzzleArea.offsetWidth * this.params.sortingSpace / 100) < maxTileSize.width;
+
+    // Compute offset
+    const offsetLeft = (useFullArea) ?
+      this.puzzleArea.offsetLeft + 0 :
+      this.puzzleArea.offsetLeft + this.puzzleArea.offsetWidth * (1 - this.params.sortingSpace / 100);
+
+    // Compute maximum size of area
+    const maxSize = {
+      width: (useFullArea) ? this.puzzleArea.offsetWidth - maxTileSize.width : this.puzzleArea.offsetWidth * this.params.sortingSpace / 100 - maxTileSize.width,
+      height: this.puzzleArea.offsetHeight - maxTileSize.height
+    };
+
+    tilesToRandomize.forEach((tileId, index) => {
+      const currentTile = this.tiles[tileId].instance;
+
+      const row = Math.floor(index / this.params.size.width);
+      const col = index % this.params.size.width;
+
+      let x = 0;
+      let y = 0;
+
+      // Set position depending on layout
+      if (params.layout === JigsawPuzzleContent.LAYOUT_STAGGERED) {
+        // Staggered layout with every odd row wider than an even row
+        if (row % 2 === 1) {
+          const maxWidth = maxSize.width - maxSize.width / this.params.size.width;
+          const extraOffset = maxWidth / (this.params.size.width - 1) / 2;
+
+          x = extraOffset + offsetLeft + maxWidth / (this.params.size.width - 1) * col + (maxTileSize.width - currentTile.getSize().width);
+        }
+        else {
+          x = offsetLeft + maxSize.width / (this.params.size.width - 1) * col + (maxTileSize.width - currentTile.getSize().width);
+        }
+        y = this.puzzleArea.offsetTop + maxSize.height / (this.params.size.height - 1) * row + (maxTileSize.height - currentTile.getSize().height);
+      }
+      else {
+        // Random position
+        x = offsetLeft + Math.random() * maxSize.width;
+        y = this.puzzleArea.offsetTop + Math.random() * maxSize.height;
+      }
+
+      this.setTilePosition({
+        tile: currentTile,
+        x: x,
+        y: y,
+        animate: this.isPuzzleSetUp
+      });
     });
   }
 
@@ -1280,7 +1333,7 @@ export default class JigsawPuzzleContent {
     };
 
     // If tile if dropped close enough to target, snap it there
-    const slack = Math.min(currentSize.baseWidth, currentSize.baseHeight) * JigsawPuzzleContent.slackFactor;
+    const slack = Math.min(currentSize.baseWidth, currentSize.baseHeight) * JigsawPuzzleContent.SLACK_FACTOR;
     if (
       (Math.abs(currentPosition.x - targetPosition.x) < slack) &&
       (Math.abs(currentPosition.y - targetPosition.y) < slack)
@@ -1360,9 +1413,6 @@ export default class JigsawPuzzleContent {
     if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
       this.finishTiles([tile], {animate: false});
     }
-    else {
-      this.randomizeTile(tile);
-    }
 
     this.puzzleArea.appendChild(tile.getDOM());
 
@@ -1376,6 +1426,11 @@ export default class JigsawPuzzleContent {
    * Handle all puzzle tiles created.
    */
   handleAllTilesCreated() {
+    this.randomizeTiles({
+      useFullArea: this.params.useFullArea,
+      layout: this.params.randomizerPattern
+    });
+
     this.startAudio('puzzleStarted');
 
     window.requestAnimationFrame(() => {
@@ -1397,7 +1452,10 @@ export default class JigsawPuzzleContent {
 }
 
 /** @constant {number} Slack factor for snapping as percentage of tile size */
-JigsawPuzzleContent.slackFactor = 0.25;
+JigsawPuzzleContent.SLACK_FACTOR = 0.25;
+
+/** @constant {string} Staggered layout */
+JigsawPuzzleContent.LAYOUT_STAGGERED = 'staggered';
 
 /** @constant {object} Default audio file paths*/
 JigsawPuzzleContent.AUDIOS = {

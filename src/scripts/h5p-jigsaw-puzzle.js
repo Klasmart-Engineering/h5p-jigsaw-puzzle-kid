@@ -28,6 +28,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
       tilesVertical: 3,
       behaviour: {
         sortingSpace: 50,
+        useFullArea: false,
+        randomizerPattern: 'random',
         enableComplete: true,
         enableHint: true,
         enableSolutionsButton: true,
@@ -97,6 +99,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
         imageFormat: this.params?.puzzleImage?.params?.file?.mime,
         previousState: this.previousState,
         puzzleImageInstance: this.puzzleImageInstance,
+        randomizerPattern: this.params.behaviour.randomizerPattern,
         showBackground: this.params.behaviour.showBackground,
         showHintCounter: this.params.behaviour.enableHint,
         size: {
@@ -108,6 +111,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
         stroke: Math.max(window.innerWidth / 750, 1.75),
         tileBorderColor: 'rgba(88, 88, 88, 0.5)',
         timeLimit: this.params.behaviour.timeLimit || null,
+        useFullArea: this.params.behaviour.useFullArea,
         uuid: this.uuid,
         a11y: {
           buttonFullscreenEnter: this.params.a11y.buttonFullscreenEnter,
