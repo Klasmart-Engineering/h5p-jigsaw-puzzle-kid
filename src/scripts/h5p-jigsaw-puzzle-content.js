@@ -758,7 +758,8 @@ export default class JigsawPuzzleContent {
         tile.instance.setDone(false);
         this.randomizeTiles({
           useFullArea: this.params.useFullArea,
-          layout: this.params.randomizerPattern
+          layout: this.params.randomizerPattern,
+          keepDone: false
         });
       });
 
@@ -785,10 +786,16 @@ export default class JigsawPuzzleContent {
    * @param {object} params Parameters.
    * @param {boolean} [params.useFullArea] If true, use full area to spread tiles.
    * @param {string} [params.layout] Spread layout, random by default.
+   * @param {boolean} [params.keepDone=true] If not true, will shuffle all tiles.
    */
   randomizeTiles(params = {}) {
     // All tile ids in random order
-    const tilesToRandomize = Util.shuffleArray([...Array(this.tiles.length).keys()]);
+    let tilesToRandomize = Util.shuffleArray(this.tiles);
+
+    if (params.keepDone) {
+      // Don't shuffle tiles that had already been placed correctly
+      tilesToRandomize = tilesToRandomize.map(tile => (tile.instance.isDone) ? null : tile);
+    }
 
     // Determine maximum tile size
     const maxTileSize = this.tiles.reduce((max, current) => {
@@ -812,8 +819,12 @@ export default class JigsawPuzzleContent {
       height: this.puzzleArea.offsetHeight - maxTileSize.height
     };
 
-    tilesToRandomize.forEach((tileId, index) => {
-      const currentTile = this.tiles[tileId].instance;
+    tilesToRandomize.forEach((tile, index) => {
+      if (tile === null) {
+        return; // Tile at this index is done
+      }
+
+      const currentTile = tile.instance;
 
       const row = Math.floor(index / this.params.size.width);
       const col = index % this.params.size.width;
@@ -1428,7 +1439,8 @@ export default class JigsawPuzzleContent {
   handleAllTilesCreated() {
     this.randomizeTiles({
       useFullArea: this.params.useFullArea,
-      layout: this.params.randomizerPattern
+      layout: this.params.randomizerPattern,
+      keepDone: Object.keys(this.params.previousState).length > 0
     });
 
     this.startAudio('puzzleStarted');

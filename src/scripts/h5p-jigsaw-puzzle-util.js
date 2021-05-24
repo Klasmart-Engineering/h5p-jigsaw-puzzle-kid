@@ -154,15 +154,17 @@ class Util {
    * @return {object[]} Shuffled array.
    */
   static shuffleArray(array) {
+    const newArray = [...array]; // Shallow clone
+
     let j, x, i;
-    for (i = array.length - 1; i > 0; i--) {
+    for (i = newArray.length - 1; i > 0; i--) {
       j = Math.floor(Math.random() * (i + 1));
-      x = array[i];
-      array[i] = array[j];
-      array[j] = x;
+      x = newArray[i];
+      newArray[i] = newArray[j];
+      newArray[j] = x;
     }
 
-    return array;
+    return newArray;
   }
 }
 
