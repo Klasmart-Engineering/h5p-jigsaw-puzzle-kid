@@ -34,7 +34,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
         enableHint: true,
         enableSolutionsButton: true,
         enableRetry: true,
-        showBackground: true
+        showBackground: true,
+        showPuzzleOutlines: true
       },
       l10n: {
         complete: 'Complete',
@@ -103,6 +104,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
         puzzleImageInstance: this.puzzleImageInstance,
         randomizerPattern: this.params.behaviour.randomizerPattern,
         showBackground: this.params.behaviour.showBackground,
+        showPuzzleOutlines: this.params.behaviour.showPuzzleOutlines,
         showHintCounter: this.params.behaviour.enableHint,
         size: {
           width: this.params.tilesHorizontal,

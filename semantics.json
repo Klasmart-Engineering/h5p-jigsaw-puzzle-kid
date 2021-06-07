@@ -243,6 +243,15 @@
         "optional": true
       },
       {
+        "name": "showPuzzleOutlines",
+        "label": "Show puzzle outlines",
+        "description": "Show puzzle outlines to indicate where a puzzle tile needs to go.",
+        "type": "boolean",
+        "importance": "low",
+        "default": true,
+        "optional": true
+      },
+      {
         "name": "sortingSpace",
         "label": "Sorting space",
         "description": "Set how much space in percent should be attached next to the jigsaw puzzle for sorting the tiles.",

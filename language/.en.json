@@ -133,6 +133,10 @@
           "description": "Show a faint version of the image in the background to indicate where a puzzle tile needs to go."
         },
         {
+          "label": "Show puzzle outlines",
+          "description": "Show puzzle outlines to indicate where a puzzle tile needs to go."
+        },
+        {
           "label": "Sorting space",
           "description": "Set how much space in percent should be attached next to the jigsaw puzzle for sorting the tiles."
         },

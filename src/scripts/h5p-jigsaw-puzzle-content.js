@@ -1040,6 +1040,34 @@ export default class JigsawPuzzleContent {
   }
 
   /**
+   * Update background Frame.
+   * @param {number} index Index of tile.
+   * @param {JigsawPuzzleTile} tile Reference tile.
+   */
+  updatePuzzleOutlines(index, tile) {
+    const currentTileDOM = tile.getDOM();
+    const currentPuzzleOutline = this.puzzleOutlines[index];
+
+    currentPuzzleOutline.style.width = currentTileDOM.style.width;
+    currentPuzzleOutline.style.height = currentTileDOM.style.height;
+
+    const currentSize = tile.getSize();
+    const currentGridPosition = tile.getGridPosition();
+
+    const targetPosition = {
+      x: this.puzzleDropzone.offsetLeft + currentGridPosition.x * currentSize.width - Math.sign(currentGridPosition.x) * currentSize.knob / 2 - currentGridPosition.x * currentSize.knob / 2,
+      y: this.puzzleDropzone.offsetTop + currentGridPosition.y * currentSize.height - Math.sign(currentGridPosition.y) * currentSize.knob / 2 - currentGridPosition.y * currentSize.knob / 2
+    };
+
+    this.puzzleOutlines[index].style.left = `${targetPosition.x}px`;
+    this.puzzleOutlines[index].style.top = `${targetPosition.y}px`;
+
+    if (!currentPuzzleOutline.isConnected) {
+      this.puzzleDropzone.appendChild(currentPuzzleOutline);
+    }
+  }
+
+  /**
    * Show overlay.
    * @param {function} callback Callback for overlay clicked.
    */
@@ -1275,7 +1303,7 @@ export default class JigsawPuzzleContent {
         this.puzzleDropzone.style.flexShrink = '';
       }
 
-      this.tiles.forEach(tile => {
+      this.tiles.forEach((tile, index) => {
         tile.instance.setScale(this.scale);
 
         // Recompute position with offset
@@ -1283,6 +1311,10 @@ export default class JigsawPuzzleContent {
           x: tile.position.x * this.puzzleDropzone.offsetWidth + this.puzzleDropzone.offsetLeft,
           y: tile.position.y * this.puzzleDropzone.offsetHeight + this.puzzleDropzone.offsetTop
         });
+
+        if (this.puzzleOutlines) {
+          this.updatePuzzleOutlines(index, tile.instance);
+        }
       });
     }
 
@@ -1437,6 +1469,42 @@ export default class JigsawPuzzleContent {
    * Handle all puzzle tiles created.
    */
   handleAllTilesCreated() {
+    if (this.params.showPuzzleOutlines) {
+      // Compute background frame color from dropzone border color
+      let rgba = window
+        .getComputedStyle(this.puzzleDropzone).getPropertyValue('border-color')
+        .replace(/[^.^\d,]/g, '')
+        .split(',')
+        .map(value => parseFloat(value, 10));
+
+      if (rgba.length === 4) {
+        rgba[3] /= 2;
+      }
+      else {
+        rgba = [0, 0, 0, 0.05];
+      }
+      rgba = `rgba(${rgba.join(',')})`;
+
+      // Create puzzle outlines from actual puzzle tiles
+      this.puzzleOutlines = this.tiles
+        .map(tile => {
+          const clone = tile.instance.getDOM().cloneNode(true);
+          clone.setAttribute('disabled', 'disabled');
+
+          // Remove background
+          const background = clone.querySelector('svg path');
+          background.parentNode.removeChild(background);
+
+          // Change border colors
+          const borders = clone.querySelectorAll('svg path');
+          borders.forEach(border => {
+            border.setAttribute('stroke', rgba);
+          });
+
+          return clone;
+        });
+    }
+
     this.randomizeTiles({
       useFullArea: this.params.useFullArea,
       layout: this.params.randomizerPattern,

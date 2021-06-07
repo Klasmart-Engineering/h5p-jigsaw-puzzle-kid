@@ -32,6 +32,10 @@
         transition: left $hint-duration, top $hint-duration;
       }
 
+      &.h5p-jigsaw-puzzle-outline {
+        border-color: red;
+      }
+
       svg {
         filter: drop-shadow( 1px 1px 1px $color-grey-0-50);
       }
