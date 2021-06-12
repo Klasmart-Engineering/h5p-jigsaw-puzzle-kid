@@ -479,7 +479,10 @@ export default class JigsawPuzzleContent {
     this.removeAudio(id);
 
     const player = document.createElement('audio');
-    player.style.display = 'none';
+    // KidsLoop requires (invisible) DOM element for replication
+    player.classList.add('h5p-invisible-audio');
+    this.content.appendChild(player);
+
     if (params.loop) {
       player.loop = true;
     }
