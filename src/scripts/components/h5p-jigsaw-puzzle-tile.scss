@@ -32,6 +32,11 @@
         transition: left $hint-duration, top $hint-duration;
       }
 
+      &.hidden {
+        visibility: hidden;
+        opacity: 0;
+      }
+
       svg {
         filter: drop-shadow( 1px 1px 1px $color-grey-0-50);
       }

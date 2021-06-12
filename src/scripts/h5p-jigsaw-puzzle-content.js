@@ -859,7 +859,7 @@ export default class JigsawPuzzleContent {
         tile: currentTile,
         x: x,
         y: y,
-        animate: this.isPuzzleSetUp
+        animate: true
       });
     });
   }
@@ -893,16 +893,23 @@ export default class JigsawPuzzleContent {
    * Move all puzzle tiles to targets and finalize them.
    * @param {JigsawPuzzleTile[]} [tiles] Tiles to move to target.
    * @param {object} [params={}] Parameters.
-   * @param {boolean} [params.animate=false] If true, animate.
+   * @param {boolean} [params.animate=true] If true, animate.
+   * @param {boolean} [params.finalize=true] If true, will finalize tiles.
    */
-  finishTiles(tiles, params = {}) {
-    tiles = tiles ? tiles.map(tile => ({instance: tile})) : this.tiles;
+  moveTilesToTarget(tiles, params = {}) {
+    tiles = tiles ?
+      tiles.map(tile => (tile.instance ? tile : {instance: tile})) :
+      this.tiles;
+
     params.animate = params.animate ?? true;
+    params.finalize = params.finalize ?? true;
 
     tiles.forEach(tile => {
       this.moveTileToTarget(tile.instance, {animate: params.animate});
 
-      this.finalizeTile(tile.instance);
+      if (params.finalize) {
+        this.finalizeTile(tile.instance);
+      }
     });
   }
 
@@ -1425,7 +1432,7 @@ export default class JigsawPuzzleContent {
   handlePuzzleTileCreated(tile) {
     // Position tile randomly depending on space available
     if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
-      this.finishTiles([tile], {animate: false});
+      this.moveTilesToTarget([tile], {animate: false, finalize: true});
     }
 
     this.puzzleArea.appendChild(tile.getDOM());
@@ -1438,23 +1445,58 @@ export default class JigsawPuzzleContent {
 
   /**
    * Handle all puzzle tiles created.
+   *
+   * Could be preloaded e.g. in Course Presentation where width is still 0.
    */
-  handleAllTilesCreated() {
-    this.randomizeTiles({
-      useFullArea: this.params.useFullArea,
-      layout: this.params.randomizerPattern,
-      keepDone: Object.keys(this.params.previousState).length > 0
+  handleAllTilesCreated(interval = 500, retries = Infinity) {
+    if (this.puzzleArea?.offsetWidth > 0) {
+      this.handleDOMVisible();
+    }
+    else if (retries === 0) {
+      this.tiles.forEach(tile => {
+        tile.instance.show();
+      });
+
+      return; // Give up
+    }
+    else {
+      this.tiles.forEach(tile => {
+        tile.instance.hide();
+      });
+
+      clearTimeout(this.timeoutWaitForPuzzleArea);
+      this.timeoutWaitForPuzzleArea = setTimeout(() => {
+        this.handleAllTilesCreated(interval, retries - 1);
+      }, interval);
+    }
+  }
+
+  /**
+   * Handle DOM visible.
+   */
+  handleDOMVisible() {
+    this.tiles.forEach(tile => {
+      tile.instance.show();
     });
 
-    this.startAudio('puzzleStarted');
+    this.moveTilesToTarget(this.tiles, {animate: false, finalize: false});
+    setTimeout(() => {
+      this.randomizeTiles({
+        useFullArea: this.params.useFullArea,
+        layout: this.params.randomizerPattern,
+        keepDone: Object.keys(this.params.previousState).length > 0
+      });
 
-    window.requestAnimationFrame(() => {
-      this.isPuzzleSetUp = true;
+      this.startAudio('puzzleStarted');
 
-      setTimeout(() => {
-        this.handleResized();
-      }, 100); // For large images
-    });
+      window.requestAnimationFrame(() => {
+        this.isPuzzleSetUp = true;
+
+        setTimeout(() => {
+          this.handleResized();
+        }, 100); // For large images
+      });
+    }, 500);
   }
 
   /**
@@ -1462,7 +1504,7 @@ export default class JigsawPuzzleContent {
    */
   handleTimeUp() {
     this.handlePuzzleCompleted({xAPI: true});
-    this.finishTiles();
+    this.moveTilesToTarget();
   }
 }
 
