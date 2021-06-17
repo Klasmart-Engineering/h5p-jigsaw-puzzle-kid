@@ -39,6 +39,13 @@
         display: none;
       }
     }
+
+    .h5p-invisible-audio {
+      height: 0;
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+    }
   }
 
   .h5p-question-buttons {

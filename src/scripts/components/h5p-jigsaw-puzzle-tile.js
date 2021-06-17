@@ -342,6 +342,20 @@ export default class JigsawPuzzleTile {
   }
 
   /**
+   * Show tile.
+   */
+  show() {
+    this.tile.classList.remove('hidden');
+  }
+
+  /**
+   * Hide tile.
+   */
+  hide() {
+    this.tile.classList.add('hidden');
+  }
+
+  /**
    * Show hint.
    */
   showHint() {

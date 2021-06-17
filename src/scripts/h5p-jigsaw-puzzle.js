@@ -629,7 +629,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
     this.handleInteracted();
     this.trigger(this.getXAPIPressedEvent('complete'));
     this.content.handlePuzzleCompleted(params);
-    this.content.finishTiles();
+    this.content.moveTilesToTarget();
   }
 
   /**
