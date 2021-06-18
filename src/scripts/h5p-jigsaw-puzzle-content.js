@@ -1471,6 +1471,44 @@ export default class JigsawPuzzleContent {
 
     // All tiles created?
     if (tile.getId() + 1 === this.params.size.width * this.params.size.height) {
+      if (this.params.showPuzzleOutlines) {
+        // Compute background frame color from dropzone border color
+        let rgba = window
+          .getComputedStyle(this.puzzleDropzone).getPropertyValue('border-color')
+          .replace(/[^.^\d,]/g, '')
+          .split(',')
+          .map(value => parseFloat(value, 10));
+
+        if (rgba.length === 4) {
+          rgba[3] /= 2;
+        }
+        else {
+          rgba = [0, 0, 0, 0.05];
+        }
+        rgba = `rgba(${rgba.join(',')})`;
+
+        // Create puzzle outlines from actual puzzle tiles
+        this.puzzleOutlines = this.tiles
+          .map(tile => {
+            const clone = tile.instance.getDOM().cloneNode(true);
+            clone.setAttribute('disabled', 'disabled');
+
+            // Remove background
+            const background = clone.querySelector('svg path');
+            background.parentNode.removeChild(background);
+
+            // Change border colors
+            const borders = clone.querySelectorAll('svg path');
+            borders.forEach(border => {
+              border.setAttribute('stroke', rgba);
+            });
+
+            return clone;
+          });
+      }
+
+      this.handleResized();
+
       this.handleAllTilesCreated();
     }
   }
@@ -1489,7 +1527,7 @@ export default class JigsawPuzzleContent {
         tile.instance.show();
       });
 
-      // Give up
+      return; // Give up
     }
     else {
       this.tiles.forEach(tile => {
@@ -1501,58 +1539,6 @@ export default class JigsawPuzzleContent {
         this.handleAllTilesCreated(interval, retries - 1);
       }, interval);
     }
-    
-    if (this.params.showPuzzleOutlines) {
-      // Compute background frame color from dropzone border color
-      let rgba = window
-        .getComputedStyle(this.puzzleDropzone).getPropertyValue('border-color')
-        .replace(/[^.^\d,]/g, '')
-        .split(',')
-        .map(value => parseFloat(value, 10));
-
-      if (rgba.length === 4) {
-        rgba[3] /= 2;
-      }
-      else {
-        rgba = [0, 0, 0, 0.05];
-      }
-      rgba = `rgba(${rgba.join(',')})`;
-
-      // Create puzzle outlines from actual puzzle tiles
-      this.puzzleOutlines = this.tiles
-        .map(tile => {
-          const clone = tile.instance.getDOM().cloneNode(true);
-          clone.setAttribute('disabled', 'disabled');
-
-          // Remove background
-          const background = clone.querySelector('svg path');
-          background.parentNode.removeChild(background);
-
-          // Change border colors
-          const borders = clone.querySelectorAll('svg path');
-          borders.forEach(border => {
-            border.setAttribute('stroke', rgba);
-          });
-
-          return clone;
-        });
-    }
-
-    this.randomizeTiles({
-      useFullArea: this.params.useFullArea,
-      layout: this.params.randomizerPattern,
-      keepDone: Object.keys(this.params.previousState).length > 0
-    });
-
-    this.startAudio('puzzleStarted');
-
-    window.requestAnimationFrame(() => {
-      this.isPuzzleSetUp = true;
-
-      setTimeout(() => {
-        this.handleResized();
-      }, 100); // For large images
-    });
   }
 
   /**
@@ -1578,7 +1564,7 @@ export default class JigsawPuzzleContent {
 
         setTimeout(() => {
           this.handleResized();
-        }, 100); // For large images
+        }, 250); // For large images
       });
     }, 500);
   }
