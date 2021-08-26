@@ -1557,6 +1557,8 @@ export default class JigsawPuzzleContent {
         keepDone: Object.keys(this.params.previousState).length > 0
       });
 
+      this.runAttentionTimer();
+      this.runHintTimer();
       this.startAudio('puzzleStarted');
 
       window.requestAnimationFrame(() => {
