@@ -43,7 +43,8 @@ export default class JigsawPuzzleContent {
       onCompleted: () => {},
       onButtonFullscreenClicked: () => {},
       onHintDone: () => {},
-      onInteracted: () => {}
+      onInteracted: () => {},
+      onPuzzleReset: () => {}
     }, callbacks);
 
     // Audios
@@ -1426,7 +1427,7 @@ export default class JigsawPuzzleContent {
    * @param {Event} event Event.
    */
   handleButtonAudioClicked(event) {
-    if ([...event?.currentTarget.classList].indexOf('h5p-jigsaw-puzzle-button-active') !== -1) {
+    if (event?.currentTarget.classList.contains('h5p-jigsaw-puzzle-button-active')) {
       this.startAudio('backgroundMusic');
     }
     else {
@@ -1563,6 +1564,8 @@ export default class JigsawPuzzleContent {
 
       window.requestAnimationFrame(() => {
         this.isPuzzleSetUp = true;
+
+        this.callbacks.onPuzzleReset();
 
         setTimeout(() => {
           this.handleResized();

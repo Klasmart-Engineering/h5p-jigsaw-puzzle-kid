@@ -149,6 +149,9 @@ export default class JigsawPuzzleKID extends H5P.Question {
         onInteracted: (() => {
           // Handle interacted
           this.handleInteracted();
+        }),
+        onPuzzleReset: (() => {
+          this.handlePuzzleReset();
         })
       }
     );
@@ -381,6 +384,8 @@ export default class JigsawPuzzleKID extends H5P.Question {
     if (this.content) {
       this.content.reset();
     }
+
+    this.handlePuzzleReset();
 
     this.trigger('resize');
   }
@@ -656,6 +661,13 @@ export default class JigsawPuzzleKID extends H5P.Question {
    */
   handleClickButtonRetry() {
     this.resetTask();
+  }
+
+  /**
+   * Handle puzzle is reset (and ready to be used).
+   */
+  handlePuzzleReset() {
+    this.trigger('reset');
   }
 }
 
