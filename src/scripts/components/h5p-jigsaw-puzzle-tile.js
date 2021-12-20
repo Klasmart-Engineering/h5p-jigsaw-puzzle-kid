@@ -496,10 +496,11 @@ export default class JigsawPuzzleTile {
     }
 
     // Listeners for moving and dropping
-    document.addEventListener('mousemove', this.handleTileMoved);
-    document.addEventListener('touchmove', this.handleTileMoved);
-    document.addEventListener('mouseup', this.handleTileMoveEnded);
-    document.addEventListener('touchend', this.handleTileMoveEnded);
+    const tile = this.getDOM();
+    tile.addEventListener('mousemove', this.handleTileMoved);
+    tile.addEventListener('touchmove', this.handleTileMoved, { passive: false });
+    tile.addEventListener('mouseup', this.handleTileMoveEnded);
+    tile.addEventListener('touchend', this.handleTileMoveEnded);
 
     this.callbacks.onPuzzleTileMoveStarted(this);
   }
@@ -510,6 +511,7 @@ export default class JigsawPuzzleTile {
    */
   handleTileMoved(event) {
     event = event || window.event;
+    event.preventDefault();
 
     let deltaX = 0;
     let deltaY = 0;
@@ -528,9 +530,10 @@ export default class JigsawPuzzleTile {
       this.moveInitialY = event.clientY;
     }
 
+    const currentPosition = this.getPosition();
     this.setPosition({
-      x: this.getPosition().x - deltaX,
-      y: this.getPosition().y - deltaY
+      x: currentPosition.x - deltaX,
+      y: currentPosition.y - deltaY
     });
 
     this.callbacks.onPuzzleTileMoved(this);
@@ -542,10 +545,11 @@ export default class JigsawPuzzleTile {
    */
   handleTileMoveEnded() {
     // Remove listeners
-    document.removeEventListener('mousemove', this.handleTileMoved);
-    document.removeEventListener('touchmove', this.handleTileMoved);
-    document.removeEventListener('mouseup', this.handleTileMoveEnded);
-    document.removeEventListener('touchend', this.handleTileMoveEnded);
+    const tile = this.getDOM();
+    tile.removeEventListener('mousemove', this.handleTileMoved);
+    tile.removeEventListener('touchmove', this.handleTileMoved);
+    tile.removeEventListener('mouseup', this.handleTileMoveEnded);
+    tile.removeEventListener('touchend', this.handleTileMoveEnded);
 
     this.callbacks.onPuzzleTileMoveEnded(this);
   }
