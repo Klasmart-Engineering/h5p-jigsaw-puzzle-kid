@@ -487,21 +487,20 @@ export default class JigsawPuzzleTile {
     this.handleAnimationMoveEnded();
 
     // Keep track of starting click position in absolute pixels
+    // Listeners for moving and dropping
+    const tile = this.getDOM();
     if (event.type === 'touchstart') {
       this.moveInitialX = event.touches[0].clientX;
       this.moveInitialY = event.touches[0].clientY;
+      tile.addEventListener('touchmove', this.handleTileMoved, { passive: false });
+      tile.addEventListener('touchend', this.handleTileMoveEnded);
     }
     else {
       this.moveInitialX = event.clientX;
       this.moveInitialY = event.clientY;
+      tile.addEventListener('mousemove', this.handleTileMoved);
+      tile.addEventListener('mouseup', this.handleTileMoveEnded);
     }
-
-    // Listeners for moving and dropping
-    const tile = this.getDOM();
-    tile.addEventListener('mousemove', this.handleTileMoved);
-    tile.addEventListener('touchmove', this.handleTileMoved, { passive: false });
-    tile.addEventListener('mouseup', this.handleTileMoveEnded);
-    tile.addEventListener('touchend', this.handleTileMoveEnded);
 
     this.callbacks.onPuzzleTileMoveStarted(this);
   }
