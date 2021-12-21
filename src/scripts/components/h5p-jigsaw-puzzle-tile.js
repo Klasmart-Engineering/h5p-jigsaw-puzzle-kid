@@ -481,6 +481,7 @@ export default class JigsawPuzzleTile {
 
     event = event || window.event;
     event.preventDefault();
+    event.stopPropagation();
 
     // Stop animation of hint that may be set
     this.handleAnimationMoveEnded();
@@ -512,6 +513,7 @@ export default class JigsawPuzzleTile {
   handleTileMoved(event) {
     event = event || window.event;
     event.preventDefault();
+    event.stopPropagation();
 
     let deltaX = 0;
     let deltaY = 0;
@@ -543,7 +545,11 @@ export default class JigsawPuzzleTile {
    * Handle tile stopped moving.
    * @param {Event} event MouseEvent|TouchEvent.
    */
-  handleTileMoveEnded() {
+  handleTileMoveEnded(event) {
+    event = event || window.event;
+    event.preventDefault();
+    event.stopPropagation();
+
     // Remove listeners
     const tile = this.getDOM();
     tile.removeEventListener('mousemove', this.handleTileMoved);
@@ -556,6 +562,7 @@ export default class JigsawPuzzleTile {
 
   /**
    * Handle moving animation ended.
+   * @param {Event} event MouseEvent|TouchEvent.
    */
   handleAnimationMoveEnded() {
     this.tile.style.transitionDuration = '';
