@@ -1404,6 +1404,13 @@ export default class JigsawPuzzleContent {
       this.startAudio('puzzleTileCorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
     else {
+      // Make DOM position permanent
+      this.setTilePosition({
+        tile: tile,
+        x: currentPosition.x,
+        y: currentPosition.y
+      });
+
       tile.setDone(false);
       this.startAudio('puzzleTileIncorrect', {silence: true, keepAlives: this.audiosToKeepAlive});
     }
