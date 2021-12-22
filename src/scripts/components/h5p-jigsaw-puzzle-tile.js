@@ -534,8 +534,8 @@ export default class JigsawPuzzleTile {
    */
   handleTileMoveEnded() {
     // Remove listeners
-    this.tile.removeEventListener('touchmove', this.handleTileMoved);
-    this.tile.removeEventListener('touchend', this.handleTileMoveEnded);
+    this.tile.removeEventListener('touchmove', this.handleTileMoved, false);
+    this.tile.removeEventListener('touchend', this.handleTileMoveEnded, false);
     document.removeEventListener('mousemove', this.handleTileMoved, true);
     document.removeEventListener('mouseup', this.handleTileMoveEnded, true);
 
