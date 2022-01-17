@@ -761,11 +761,12 @@ export default class JigsawPuzzleContent {
         this.showTileBorders(tile.instance);
         tile.instance.enable();
         tile.instance.setDone(false);
-        this.randomizeTiles({
-          useFullArea: this.params.useFullArea,
-          layout: this.params.randomizerPattern,
-          keepDone: false
-        });
+      });
+
+      this.randomizeTiles({
+        useFullArea: this.params.useFullArea,
+        layout: this.params.randomizerPattern,
+        keepDone: false
       });
 
       this.hintsUsed = 0;
@@ -796,6 +797,11 @@ export default class JigsawPuzzleContent {
   randomizeTiles(params = {}) {
     // All tile ids in random order
     let tilesToRandomize = Util.shuffleArray(this.tiles);
+
+    // Randomize position in DOM
+    for (let i = tilesToRandomize.length; i >= 0; i--) {
+      this.puzzleArea.appendChild(tilesToRandomize[Math.random() * i | 0].instance.getDOM());
+    }
 
     if (params.keepDone) {
       // Don't shuffle tiles that had already been placed correctly
