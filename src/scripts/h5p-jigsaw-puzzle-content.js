@@ -758,6 +758,7 @@ export default class JigsawPuzzleContent {
 
     setTimeout(() => {
       this.tiles.forEach(tile => {
+        this.showTileBorders(tile.instance);
         tile.instance.enable();
         tile.instance.setDone(false);
         this.randomizeTiles({
@@ -1102,6 +1103,22 @@ export default class JigsawPuzzleContent {
     this.overlay.removeEventListener('click', this.overlay.clickCallback);
     this.overlay.clickCallback = null;
     this.isOverlayShowing = false;
+  }
+
+  /**
+   * Show all tile borders
+   * @param {JigsawPuzzleTile} tile Tile to show borders of.
+   */
+  showTileBorders(tile) {
+    tile.updateParams({
+      borders: {
+        top: {opacity: 1},
+        bottom: {opacity: 1},
+        left: {opacity: 1},
+        right: {opacity: 1}
+      }
+    });
+    tile.repaintSVG();
   }
 
   /**
