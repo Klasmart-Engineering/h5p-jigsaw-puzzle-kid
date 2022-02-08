@@ -115,7 +115,6 @@ export default class JigsawPuzzleContent {
       H5P.getCrossOrigin(params.puzzleImageInstance.source) :
       'Anonymous';
     this.image.src = params.puzzleImageInstance.source;
-    this.canvas = document.createElement('canvas');
 
     // Attention seeker manager for elements
     this.attentionSeeker = new H5P.AttentionSeeker();
@@ -198,38 +197,6 @@ export default class JigsawPuzzleContent {
   }
 
   /**
-   * Get cropped image.
-   * @param {HTMLElement} params.canvas Canvas.
-   * @param {number} params.x Start position x.
-   * @param {number} params.y Start position y.
-   * @param {number} params.width Width.
-   * @param {number} params.height Height.
-   * @param {string} [params.format='image/png'] Image format.
-   * @return {string} Image source base64.
-   */
-  getCroppedImageSrc(params = {}) {
-    const canvasBuffer = document.createElement('canvas');
-    const canvasBufferContext = canvasBuffer.getContext('2d');
-    canvasBuffer.width = params.width;
-    canvasBuffer.height = params.height;
-
-    canvasBufferContext.beginPath();
-    canvasBufferContext.rect(0, 0, params.width, params.height);
-    canvasBufferContext.fillStyle = 'white';
-    canvasBufferContext.fill();
-
-    canvasBufferContext.drawImage(
-      params.canvas,
-      params.x, params.y,
-      params.width, params.height,
-      0, 0,
-      params.width, params.height
-    );
-
-    return canvasBuffer.toDataURL(params.format);
-  }
-
-  /**
    * Create puzzle tile.
    * @param {object} params Parameters.
    * @param {number} params.x Tile grid position horizontally.
@@ -281,16 +248,6 @@ export default class JigsawPuzzleContent {
     }
     const type = `${verticalAlignment}-${horizontalAlignment}`;
 
-    // Image
-    const imageSource = this.getCroppedImageSrc({
-      canvas: this.canvas,
-      x: params.x * baseWidth - Math.sign(params.x) * knobSize / 2,
-      y: params.y * baseHeight - Math.sign(params.y) * knobSize / 2,
-      width: tileWidth,
-      height: tileHeight,
-      format: params.format
-    });
-
     return new JigsawPuzzleTile(
       {
         id: params.y * this.params.size.width + params.x,
@@ -300,14 +257,15 @@ export default class JigsawPuzzleContent {
         height: tileHeight,
         gridPosition: {x: params.x, y: params.y},
         knobSize: knobSize,
-        imageSource: imageSource,
+        imageSource: this.image.src,
         imageCrossOrigin: this.imageCrossOrigin,
         type: type,
         stroke: this.params.stroke,
         borderColor: this.params.tileBorderColor,
         borders: borders,
         uuid: this.params.uuid,
-        container: this.puzzleArea
+        container: this.puzzleArea,
+        size: this.params.size
       },
       {
         onPuzzleTileCreated: ((tile) => {
@@ -431,9 +389,11 @@ export default class JigsawPuzzleContent {
    * Add audios.
    */
   addAudios() {
-    if (!this.params.sound) {
+    if (!this.params.sound || this.audiosDefined || !H5P.SoundJS.initializeDefaultPlugins()) {
       return;
     }
+
+    H5P.SoundJS.alternateExtensions = ['mp3'];
 
     let backgroundMusic = null;
     if (this.params.sound.backgroundMusic === 'custom') {
@@ -450,7 +410,7 @@ export default class JigsawPuzzleContent {
 
     if (backgroundMusic) {
       this.titlebar.showAudioButton();
-      this.addAudio('backgroundMusic', backgroundMusic, {loop: true});
+      this.addAudio('backgroundMusic', backgroundMusic, { interrupt: H5P.SoundJS.INTERRUPT_NONE, loop: -1 });
     }
 
     // Add custom overrides of default included audios
@@ -458,14 +418,17 @@ export default class JigsawPuzzleContent {
       'puzzleStarted', 'puzzleTilePickUp', 'puzzleTileCorrect',
       'puzzleTileIncorrect', 'puzzleCompleted', 'puzzleHint'
     ].forEach(id => {
+      let assetPath;
+
       if (this.params.sound[id] && this.params.sound[id].length > 0 && this.params.sound[id][0].path) {
-        this.addAudio(id, H5P.getPath(this.params.sound[id][0].path, this.params.contentId));
+        assetPath = H5P.getPath(this.params.sound[id][0].path, this.params.contentId);
       }
       else {
-        const assetPath = this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]);
-        if (assetPath) {
-          this.addAudio(id, assetPath);
-        }
+        assetPath = this.getAssetPath(JigsawPuzzleContent.AUDIOS[id]);
+      }
+
+      if (assetPath) {
+        this.addAudio(id, assetPath, { interrupt: H5P.SoundJS.INTERRUPT_NONE });
       }
     });
   }
@@ -478,23 +441,11 @@ export default class JigsawPuzzleContent {
    */
   addAudio(id, path, params = {}) {
     this.removeAudio(id);
-
-    const player = document.createElement('audio');
-    // KidsLoop requires (invisible) DOM element for replication
-    player.classList.add('h5p-invisible-audio');
-    this.content.appendChild(player);
-
-    if (params.loop) {
-      player.loop = true;
-    }
-    if (params.volume) {
-      player.volume = params.volume;
-    }
-    player.src = path;
     this.audios[id] = {
-      player: player,
-      promise: null
+      params: params
     };
+
+    H5P.SoundJS.registerSound(path, id);
   }
 
   /**
@@ -502,82 +453,27 @@ export default class JigsawPuzzleContent {
    * @param {string} id Id.
    */
   removeAudio(id) {
+    H5P.SoundJS.removeSound(id);
     delete this.audios[id];
   }
 
   /**
    * Start audio.
    * @param {string} id Id.
-   * @param {object} [params={}] Paremeters.
-   * @param {boolean} [params.silence] If true, will stop other audios.
-   * @param {string[]} [params.keepAlives] Ids of audios to keep alive when silencing
    */
-  startAudio(id, params = {}) {
+  startAudio(id) {
     if (!this.audios[id]) {
       return;
     }
 
-    if (params.silence) {
-      this.stopAudios({keepAlives: params.keepAlives});
-    }
-
-    const currentAudio = this.audios[id];
-    if (!currentAudio) {
-      return;
-    }
-
-    if (!currentAudio.promise) {
-      currentAudio.promise = currentAudio.player.play();
-      currentAudio.promise
-        .finally(() => {
-          currentAudio.promise = null;
-        })
-        .catch(() => {
-          // Browser policy prevents playing
-          console.warn('H5P.JigsawPuzzle: Playing audio is prevented by browser policy');
-          if (id === 'backgroundMusic') {
-            this.titlebar.toggleAudioButton('mute');
-          }
-        });
-    }
-  }
-
-  /**
-   * Stop audio.
-   * @param {string} id Id.
-   */
-  stopAudio(id) {
-    if (!this.audios[id]) {
-      return;
-    }
-
-    const currentAudio = this.audios[id];
-
-    if (currentAudio.promise) {
-      currentAudio.promise.then(() => {
-        currentAudio.player.pause();
-        currentAudio.player.load(); // Reset
-        currentAudio.promise = null;
-      });
-    }
-    else {
-      currentAudio.player.pause();
-      currentAudio.player.load(); // Reset
-    }
+    H5P.SoundJS.play(id, this.audios[id].params || {});
   }
 
   /**
    * Stop audios
-   * @param {object} [params={}] Parameters
    */
-  stopAudios(params = {}) {
-    for (let audio in this.audios) {
-      if (params?.keepAlives.indexOf(audio) !== -1) {
-        continue; // Ignore audio
-      }
-
-      this.stopAudio(audio);
-    }
+  stopAudios() {
+    H5P.SoundJS.stop();
   }
 
   /**
@@ -1082,6 +978,38 @@ export default class JigsawPuzzleContent {
 
     if (!currentPuzzleOutline.isConnected) {
       this.puzzleDropzone.appendChild(currentPuzzleOutline);
+
+      // Tile is in top row
+      if (tile.getId() < this.params.size.width) {
+        const top = currentPuzzleOutline.querySelector('.border-top');
+        if (top) {
+          top.setAttribute('stroke-opacity', '0');
+        }
+      }
+
+      // Tile is in outer right column
+      if (tile.getId() % this.params.size.width === this.params.size.width - 1) {
+        const right = currentPuzzleOutline.querySelector('.border-right');
+        if (right) {
+          right.setAttribute('stroke-opacity', '0');
+        }
+      }
+
+      // Tile is in bottom row
+      if (this.params.size.width * (this.params.size.height - 1) - 1 < tile.getId()) {
+        const bottom = currentPuzzleOutline.querySelector('.border-bottom');
+        if (bottom) {
+          bottom.setAttribute('stroke-opacity', '0');
+        }
+      }
+
+      // Tile is in outer left column
+      if (tile.getId() % this.params.size.width === 0) {
+        const left = currentPuzzleOutline.querySelector('.border-left');
+        if (left) {
+          left.setAttribute('stroke-opacity', '0');
+        }
+      }
     }
   }
 
@@ -1116,15 +1044,7 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Tile to show borders of.
    */
   showTileBorders(tile) {
-    tile.updateParams({
-      borders: {
-        top: {opacity: 1},
-        bottom: {opacity: 1},
-        left: {opacity: 1},
-        right: {opacity: 1}
-      }
-    });
-    tile.repaintSVG();
+    tile.setBorders({ top: true, right: true, bottom: true, left: true });
   }
 
   /**
@@ -1135,65 +1055,53 @@ export default class JigsawPuzzleContent {
     // top
     if (tile.getId() < this.params.size.width) {
       // Tile is in top row
-      tile.updateParams({borders: {top: {opacity: 0}}});
-      tile.repaintSVG();
+      tile.setBorders({top: false});
     }
     else {
       const neighbor = this.tiles[tile.getId() - this.params.size.width].instance;
 
       if (neighbor.isDisabled) {
-        tile.updateParams({borders: {top: {opacity: 0}}});
-        tile.repaintSVG();
-        neighbor.updateParams({borders: {bottom: {opacity: 0}}});
-        neighbor.repaintSVG();
+        tile.setBorders({top: false});
+        neighbor.setBorders({bottom: false});
       }
     }
 
     // right
     if (tile.getId() % this.params.size.width === this.params.size.width - 1) {
       // Tile is in outer right column
-      tile.updateParams({borders: {right: {opacity: 0}}});
-      tile.repaintSVG();
+      tile.setBorders({right: false});
     }
     else {
       const neighbor = this.tiles[tile.getId() + 1].instance;
       if (neighbor.isDisabled) {
-        tile.updateParams({borders: {right: {opacity: 0}}});
-        tile.repaintSVG();
-        neighbor.updateParams({borders: {left: {opacity: 0}}});
-        neighbor.repaintSVG();
+        tile.setBorders({right: false});
+        neighbor.setBorders({left: false});
       }
     }
 
     // bottom
     if (this.params.size.width * (this.params.size.height - 1) - 1 < tile.getId()) {
       // Tile is in bottom row
-      tile.updateParams({borders: {bottom: {opacity: 0}}});
-      tile.repaintSVG();
+      tile.setBorders({bottom: false});
     }
     else {
       const neighbor = this.tiles[tile.getId() + this.params.size.width].instance;
       if (neighbor.isDisabled) {
-        tile.updateParams({borders: {bottom: {opacity: 0}}});
-        tile.repaintSVG();
-        neighbor.updateParams({borders: {top: {opacity: 0}}});
-        neighbor.repaintSVG();
+        tile.setBorders({bottom: false});
+        neighbor.setBorders({top: false});
       }
     }
 
     // left
     if (tile.getId() % this.params.size.width === 0) {
       // Tile is in outer left column
-      tile.updateParams({borders: {left: {opacity: 0}}});
-      tile.repaintSVG();
+      tile.setBorders({left: false});
     }
     else {
       const neighbor = this.tiles[tile.getId() - 1].instance;
       if (neighbor.isDisabled) {
-        tile.updateParams({borders: {left: {opacity: 0}}});
-        tile.repaintSVG();
-        neighbor.updateParams({borders: {right: {opacity: 0}}});
-        neighbor.repaintSVG();
+        tile.setBorders({left: false});
+        neighbor.setBorders({right: false});
       }
     }
   }
@@ -1236,13 +1144,6 @@ export default class JigsawPuzzleContent {
       height: this.image.naturalHeight
     };
 
-    this.canvas.setAttribute('width', this.image.naturalWidth);
-    this.canvas.setAttribute('height', this.image.naturalHeight);
-
-    // Canvas is used to grab the background for each puzzle tile
-    const canvasContext = this.canvas.getContext('2d');
-    canvasContext.drawImage(this.image, 0, 0);
-
     for (let y = 0; y < this.params.size.height; y++) {
       for (let x = 0; x < this.params.size.width; x++) {
         this.tiles.push({
@@ -1260,14 +1161,10 @@ export default class JigsawPuzzleContent {
     }
 
     if (this.params.showBackground) {
-      // Apply transparency on background image and use it as background
-      const imageData = canvasContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      const pixels = imageData.data;
-      for (let i = 0; i < pixels.length; i += 4) {
-        pixels[i + 3] = 16;
-      }
-      canvasContext.putImageData(imageData, 0, 0);
-      this.puzzleDropzone.style.backgroundImage = `url(${this.canvas.toDataURL()})`;
+      const backgroundImage = document.createElement('img');
+      backgroundImage.classList.add('h5p-jigsaw-puzzle-background-image');
+      backgroundImage.setAttribute('src', this.image.src);
+      this.puzzleDropzone.appendChild(backgroundImage);
     }
 
     if (this.audios.backgroundMusic) {
@@ -1461,7 +1358,7 @@ export default class JigsawPuzzleContent {
       this.startAudio('backgroundMusic');
     }
     else {
-      this.stopAudio('backgroundMusic');
+      this.stopAudios();
     }
   }
 
@@ -1511,36 +1408,40 @@ export default class JigsawPuzzleContent {
           .map(value => parseFloat(value, 10));
 
         if (rgba.length === 4) {
-          rgba[3] /= 2;
+          rgba[3];
         }
         else {
-          rgba = [0, 0, 0, 0.05];
+          rgba = [0, 0, 0, 0.1];
         }
         rgba = `rgba(${rgba.join(',')})`;
 
         // Create puzzle outlines from actual puzzle tiles
-        this.puzzleOutlines = this.tiles
-          .map(tile => {
-            const clone = tile.instance.getDOM().cloneNode(true);
-            clone.setAttribute('disabled', 'disabled');
+        setTimeout(() => {
+          this.puzzleOutlines = this.tiles
+            .map(tile => {
+              const clone = tile.instance.getDOM().cloneNode(true);
+              clone.setAttribute('disabled', 'disabled');
 
-            // Remove background
-            const background = clone.querySelector('svg path');
-            background.parentNode.removeChild(background);
+              // Remove background
+              const background = clone.querySelector('svg path');
+              if (background) {
+                background.parentNode.removeChild(background);
+              }
 
-            // Change border colors
-            const borders = clone.querySelectorAll('svg path');
-            borders.forEach(border => {
-              border.setAttribute('stroke', rgba);
+              // Change border colors
+              const borders = clone.querySelectorAll('svg path');
+              borders.forEach(border => {
+                border.setAttribute('stroke', rgba);
+              });
+
+              return clone;
             });
 
-            return clone;
-          });
+          this.handleResized();
+
+          this.handleAllTilesCreated();
+        }, 0);
       }
-
-      this.handleResized();
-
-      this.handleAllTilesCreated();
     }
   }
 

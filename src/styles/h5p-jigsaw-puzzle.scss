@@ -22,6 +22,11 @@
         &.hint {
           z-index: 3;
         }
+
+        .h5p-jigsaw-puzzle-background-image {
+          filter: opacity(15%);
+          width: 100%;
+        }
       }
     }
 
