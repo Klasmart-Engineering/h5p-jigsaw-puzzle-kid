@@ -58,6 +58,11 @@
       "machineName": "H5PEditor.AttentionSeeker",
       "majorVersion": 0,
       "minorVersion": 2
+    },
+    {
+      "machineName": "EditorFontKidsLoop",
+      "majorVersion": 1,
+      "minorVersion": 0
     }
   ]
 }
