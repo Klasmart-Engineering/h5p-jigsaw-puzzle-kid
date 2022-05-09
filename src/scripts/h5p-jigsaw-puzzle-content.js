@@ -44,7 +44,8 @@ export default class JigsawPuzzleContent {
       onButtonFullscreenClicked: () => {},
       onHintDone: () => {},
       onInteracted: () => {},
-      onPuzzleReset: () => {}
+      onPuzzleReset: () => {},
+      onChanged: () => {}
     }, callbacks);
 
     // Audios
@@ -1350,6 +1351,8 @@ export default class JigsawPuzzleContent {
       this.runAttentionTimer();
       this.runHintTimer();
     }
+
+    this.callbacks.onChanged();
   }
 
   /**

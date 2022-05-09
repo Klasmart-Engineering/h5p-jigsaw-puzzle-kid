@@ -152,6 +152,9 @@ export default class JigsawPuzzleKID extends H5P.Question {
         }),
         onPuzzleReset: (() => {
           this.handlePuzzleReset();
+        }),
+        onChanged: (() => {
+          this.handleContentChanged();
         })
       }
     );
@@ -635,6 +638,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
     this.trigger(this.getXAPIPressedEvent('complete'));
     this.content.handlePuzzleCompleted(params);
     this.content.moveTilesToTarget();
+    this.handleContentChanged();
   }
 
   /**
@@ -654,6 +658,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       useFullArea: this.params.behaviour.useFullArea,
       layout: this.params.behaviour.randomizerPattern
     });
+    this.handleContentChanged();
   }
 
   /**
@@ -668,6 +673,14 @@ export default class JigsawPuzzleKID extends H5P.Question {
    */
   handlePuzzleReset() {
     this.trigger('reset');
+    this.handleContentChanged();
+  }
+
+  /**
+   * Handle content changed.
+   */
+  handleContentChanged() {
+    this.trigger('kllStoreSessionState', undefined, { bubbles: true, external: true });
   }
 }
 
