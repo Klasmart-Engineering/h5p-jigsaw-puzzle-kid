@@ -166,6 +166,54 @@ class Util {
 
     return newArray;
   }
+
+  /**
+   * Get relative position from absolute position for reference.
+   * @param {object} absolutePosition Absolute position.
+   * @param {number} absolutePosition.x Absolute x position.
+   * @param {number} absolutePosition.y Absolute y position.
+   * @param {HTMLElement} referenceElement Reference element.
+   * @return {object} Relative position.
+   */
+  static getRelativePosition(absolutePosition, referenceElement) {
+    if (
+      !absolutePosition?.x || !absolutePosition?.y ||
+      typeof referenceElement?.getBoundingClientRect !== 'function'
+    ) {
+      return null;
+    }
+
+    const elementSize = referenceElement.getBoundingClientRect();
+
+    return {
+      x: absolutePosition.x / elementSize.width,
+      y: absolutePosition.y / elementSize.height
+    };
+  }
+
+  /**
+   * Get absolute position from relative position for reference.
+   * @param {object} relativePosition Relative position.
+   * @param {number} relativePosition.x Relative x position.
+   * @param {number} relativePosition.y Relative y position.
+   * @param {HTMLElement} referenceElement Reference element.
+   * @return {object} Absolute position.
+   */
+  static getAbsolutePosition(relativePosition, referenceElement) {
+    if (
+      !relativePosition?.x || !relativePosition?.y ||
+      typeof referenceElement?.getBoundingClientRect !== 'function'
+    ) {
+      return null;
+    }
+
+    const elementSize = referenceElement.getBoundingClientRect();
+
+    return {
+      x: relativePosition.x * elementSize.width,
+      y: relativePosition.y * elementSize.height
+    };
+  }
 }
 
 export default Util;

@@ -202,7 +202,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.complete, () => {
         this.handleClickButtonComplete({xAPI: true});
       },
-      this.params.behaviour.enableComplete && this.previousState?.tiles?.some(done => !done),
+      this.params.behaviour.enableComplete && this.previousState?.tiles?.some(tile => !tile.isDone),
       {'aria-label': this.params.a11y.complete},
       {}
     );
@@ -213,7 +213,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.hint, () => {
         this.handleClickButtonHint();
       },
-      this.params.behaviour.enableHint && this.previousState?.tiles?.some(done => !done),
+      this.params.behaviour.enableHint && this.previousState?.tiles?.some(tile => !tile.isDone),
       {'aria-label': this.params.a11y.hint},
       {}
     );
@@ -224,7 +224,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.shuffle, () => {
         this.handleClickButtonShuffle();
       },
-      this.previousState?.tiles === undefined || this.previousState?.tiles?.every(done => !done),
+      this.previousState?.tiles === undefined || this.previousState?.tiles?.every(tile => !tile.isDone),
       {'aria-label': this.params.a11y.shuffle},
       {}
     );
@@ -235,7 +235,7 @@ export default class JigsawPuzzleKID extends H5P.Question {
       this.params.l10n.tryAgain, () => {
         this.handleClickButtonRetry();
       },
-      this.params.behaviour.enableRetry && (!!this.previousState?.tiles && this.previousState?.tiles?.some(done => done)),
+      this.params.behaviour.enableRetry && (!!this.previousState?.tiles && this.previousState?.tiles?.some(tile => tile.isDone)),
       {'aria-label': this.params.a11y.tryAgain},
       {}
     );

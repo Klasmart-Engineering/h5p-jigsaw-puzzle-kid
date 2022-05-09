@@ -318,8 +318,8 @@ export default class JigsawPuzzleContent {
 
     // Required for resizing, relative position of tile in puzzle dropzone
     this.tiles[params.tile.getId()].position = {
-      x: (params.x - this.puzzleDropzone.offsetLeft) / this.puzzleDropzone.offsetWidth,
-      y: (params.y - this.puzzleDropzone.offsetTop) / this.puzzleDropzone.offsetHeight
+      x: (params.x - this.puzzleDropzone.offsetLeft) / this.puzzleArea.offsetWidth,
+      y: (params.y - this.puzzleDropzone.offsetTop) / this.puzzleArea.offsetHeight
     };
 
     // Absolute tile position on screen
@@ -1131,7 +1131,10 @@ export default class JigsawPuzzleContent {
       timeLeft: this.timeLeft,
       hintsUsed: this.hintsUsed,
       backgroundMusic: this.titlebar.getAudioButtonState(),
-      tiles: this.tiles.map(tile => tile.instance.isDone)
+      tiles: this.tiles.map(tile => ({
+        isDone: tile.instance.isDone,
+        position: Util.getRelativePosition(tile.instance.getPosition(), this.puzzleArea)
+      }))
     };
   }
 
@@ -1179,7 +1182,7 @@ export default class JigsawPuzzleContent {
       }
     }
 
-    if (Object.keys(this.params.previousState).length === 0 || this.params.previousState?.tiles.some(done => !done)) {
+    if (Object.keys(this.params.previousState).length === 0 || this.params.previousState?.tiles.some(tile => !tile.isDone)) {
       // Not completed
 
       if (this.timeLeft > 0 && typeof H5PEditor === 'undefined') {
@@ -1239,8 +1242,8 @@ export default class JigsawPuzzleContent {
 
         // Recompute position with offset
         tile.instance.setPosition({
-          x: tile.position.x * this.puzzleDropzone.offsetWidth + this.puzzleDropzone.offsetLeft,
-          y: tile.position.y * this.puzzleDropzone.offsetHeight + this.puzzleDropzone.offsetTop
+          x: tile.position.x * this.puzzleArea.offsetWidth + this.puzzleDropzone.offsetLeft,
+          y: tile.position.y * this.puzzleArea.offsetHeight + this.puzzleDropzone.offsetTop
         });
 
         if (this.puzzleOutlines) {
@@ -1390,9 +1393,19 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileCreated(tile) {
+    const previousTileState = this.params?.previousState?.tiles[tile.getId()];
+
     // Position tile randomly depending on space available
-    if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
+    if (previousTileState.isDone === true) {
       this.moveTilesToTarget([tile], {animate: false, finalize: true});
+    }
+    else if (previousTileState.position.x && previousTileState.position.y) {
+      const position = Util.getAbsolutePosition(previousTileState.position, this.puzzleArea);
+      this.setTilePosition({
+        tile: tile,
+        x: position.x,
+        y: position.y
+      });
     }
 
     this.puzzleArea.appendChild(tile.getDOM());
@@ -1481,13 +1494,18 @@ export default class JigsawPuzzleContent {
       tile.instance.show();
     });
 
-    this.moveTilesToTarget(this.tiles, {animate: false, finalize: false});
+    if (Object.keys(this.params.previousState).length === 0) {
+      this.moveTilesToTarget(this.tiles, {animate: false, finalize: false});
+    }
+
     setTimeout(() => {
-      this.randomizeTiles({
-        useFullArea: this.params.useFullArea,
-        layout: this.params.randomizerPattern,
-        keepDone: Object.keys(this.params.previousState).length > 0
-      });
+      if (Object.keys(this.params.previousState).length === 0) {
+        this.randomizeTiles({
+          useFullArea: this.params.useFullArea,
+          layout: this.params.randomizerPattern,
+          keepDone: Object.keys(this.params.previousState).length > 0
+        });
+      }
 
       this.runAttentionTimer();
       this.runHintTimer();
