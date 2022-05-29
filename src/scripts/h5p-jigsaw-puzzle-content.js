@@ -1390,6 +1390,10 @@ export default class JigsawPuzzleContent {
    * @param {JigsawPuzzleTile} tile Puzzle tile.
    */
   handlePuzzleTileCreated(tile) {
+    const previousTileState = (this.params?.previousState?.tiles) ?
+      this.params?.previousState?.tiles[tile.getId()] :
+      {};
+
     // Position tile randomly depending on space available
     if (this.params.previousState.tiles && this.params.previousState.tiles[tile.getId()] === true) {
       this.moveTilesToTarget([tile], {animate: false, finalize: true});
